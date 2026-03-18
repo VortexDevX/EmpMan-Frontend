@@ -3,6 +3,7 @@ import { useState, type MouseEvent } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { gatewayApi } from "../../lib/api";
 import { gatewayAdminEnabled } from "../../lib/deployment";
+import { EmployeeLink } from "../../components/EmployeeLink";
 
 interface Device {
   mac: string;
@@ -318,7 +319,13 @@ export function AdminDevicesPage() {
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                    {device.full_name || device.employee_code || "Unassigned"}
+                    {device.employee_id ? (
+                      <EmployeeLink employeeId={device.employee_id}>
+                        {device.full_name || device.employee_code || `Employee #${device.employee_id}`}
+                      </EmployeeLink>
+                    ) : (
+                      "Unassigned"
+                    )}
                   </p>
                   <p className="text-xs text-slate-500 font-mono">{device.ip}</p>
                 </div>
@@ -373,7 +380,11 @@ export function AdminDevicesPage() {
                         <p className="text-xs text-slate-400 font-mono">{device.mac}</p>
                       </td>
                       <td className="px-5 py-3.5 text-sm text-slate-600 dark:text-slate-300">
-                        {device.full_name || device.employee_code || (
+                        {device.employee_id ? (
+                          <EmployeeLink employeeId={device.employee_id}>
+                            {device.full_name || device.employee_code || `Employee #${device.employee_id}`}
+                          </EmployeeLink>
+                        ) : (
                           <span className="text-slate-400">Unassigned</span>
                         )}
                       </td>
@@ -496,7 +507,13 @@ export function AdminDevicesPage() {
                       </span>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">{selectedDevice.full_name || "Unknown"}</p>
+                      {selectedDevice.employee_id ? (
+                        <EmployeeLink employeeId={selectedDevice.employee_id} className="text-sm font-medium">
+                          {selectedDevice.full_name || "Unknown"}
+                        </EmployeeLink>
+                      ) : (
+                        <p className="text-sm font-medium text-slate-900 dark:text-white">{selectedDevice.full_name || "Unknown"}</p>
+                      )}
                       <p className="text-xs text-slate-400">{selectedDevice.employee_code}</p>
                     </div>
                   </div>

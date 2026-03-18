@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 import { tasksApi, employeesApi } from "../lib/api";
+import { EmployeeLink } from "../components/EmployeeLink";
 
 export function TaskAssignmentPage() {
   const navigate = useNavigate();
@@ -63,6 +64,9 @@ export function TaskAssignmentPage() {
   const minDate = new Date();
   minDate.setDate(minDate.getDate() + 1);
   const minDateStr = minDate.toISOString().split("T")[0];
+  const selectedEmployee = Array.isArray(employees)
+    ? employees.find((emp: any) => emp.id === Number(assignedTo))
+    : null;
 
   return (
     <div className="space-y-6">
@@ -154,6 +158,13 @@ export function TaskAssignmentPage() {
                         </option>
                       ))}
                 </select>
+                {selectedEmployee && (
+                  <div className="mt-2">
+                    <EmployeeLink employeeId={selectedEmployee.id} className="text-xs font-medium">
+                      View {selectedEmployee.full_name}'s details
+                    </EmployeeLink>
+                  </div>
+                )}
               </label>
 
               {/* Priority */}

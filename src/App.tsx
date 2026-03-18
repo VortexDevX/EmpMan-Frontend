@@ -43,6 +43,9 @@ const HelpPage = lazy(() =>
 const RecommendationsPage = lazy(() =>
   import("./pages/RecommendationsPage").then((m) => ({ default: m.RecommendationsPage })),
 );
+const EmployeeDetailsPage = lazy(() =>
+  import("./pages/EmployeeDetailsPage").then((m) => ({ default: m.EmployeeDetailsPage })),
+);
 
 // Management Pages
 const DashboardPage = lazy(() =>
@@ -179,6 +182,7 @@ function AppRoutes() {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="help" element={<HelpPage />} />
         <Route path="insights" element={<RecommendationsPage />} />
+        <Route path="employees/:id" element={<EmployeeDetailsPage />} />
 
         {/* ── Manager + Admin ────────────────────────── */}
         <Route

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { adminApi } from "../../lib/api";
+import { EmployeeLink } from "../../components/EmployeeLink";
 
 interface Employee {
   id: number;
@@ -207,8 +208,12 @@ export function AdminEmployeesPage() {
                       </span>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{emp.full_name}</p>
-                      <p className="text-xs text-slate-400 truncate">{emp.employee_code}</p>
+                      <EmployeeLink employeeId={emp.id} className="text-sm font-semibold truncate block">
+                        {emp.full_name}
+                      </EmployeeLink>
+                      <EmployeeLink employeeId={emp.id} className="text-xs text-slate-400 truncate block hover:text-cyan-600 dark:hover:text-cyan-300">
+                        {emp.employee_code}
+                      </EmployeeLink>
                     </div>
                   </div>
                   <span
@@ -230,9 +235,9 @@ export function AdminEmployeesPage() {
                 </div>
                 <div className="flex items-center justify-end gap-1">
                   <button
-                    onClick={() => setSelectedEmployee(emp)}
+                    onClick={() => navigate(`/employees/${emp.id}`)}
                     className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                    title="View"
+                    title="Open details page"
                   >
                     <span className="material-symbols-outlined text-[18px]">visibility</span>
                   </button>
@@ -292,8 +297,12 @@ export function AdminEmployeesPage() {
                             </span>
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-slate-900 dark:text-white">{emp.full_name}</p>
-                            <p className="text-xs text-slate-400">{emp.employee_code}</p>
+                            <EmployeeLink employeeId={emp.id} className="text-sm font-medium block">
+                              {emp.full_name}
+                            </EmployeeLink>
+                            <EmployeeLink employeeId={emp.id} className="text-xs text-slate-400 block hover:text-cyan-600 dark:hover:text-cyan-300">
+                              {emp.employee_code}
+                            </EmployeeLink>
                           </div>
                         </div>
                       </td>
@@ -320,9 +329,9 @@ export function AdminEmployeesPage() {
                       <td className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={() => setSelectedEmployee(emp)}
+                            onClick={() => navigate(`/employees/${emp.id}`)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                            title="View"
+                            title="Open details page"
                           >
                             <span className="material-symbols-outlined text-[18px]">visibility</span>
                           </button>
@@ -392,6 +401,12 @@ export function AdminEmployeesPage() {
             </div>
 
             <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
+              <button
+                onClick={() => navigate(`/employees/${selectedEmployee.id}`)}
+                className="btn-secondary"
+              >
+                Open Details
+              </button>
               <button
                 onClick={() => toggleActiveMutation.mutate(selectedEmployee)}
                 className="btn-secondary"

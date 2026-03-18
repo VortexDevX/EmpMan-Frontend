@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi, predictionsApi } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
+import { EmployeeLink } from "../components/EmployeeLink";
 
 function toScore(value: unknown, decimals = 1): string {
   const num = Number(value);
@@ -13,7 +14,7 @@ function AdviceCard({
   action,
   tone = "slate",
 }: {
-  title: string;
+  title: React.ReactNode;
   meaning: string;
   action: string;
   tone?: "slate" | "teal" | "amber" | "rose";
@@ -105,7 +106,15 @@ export function RecommendationsPage() {
                 return (
                   <AdviceCard
                     key={idx}
-                    title={`${alert.employee_name || `Employee #${alert.employee_id}`} • Risk ${String(alert.risk_level).toUpperCase()}`}
+                    title={
+                      <>
+                        <EmployeeLink employeeId={alert.employee_id}>
+                          {alert.employee_name || `Employee #${alert.employee_id}`}
+                        </EmployeeLink>
+                        {" • "}
+                        Risk {String(alert.risk_level).toUpperCase()}
+                      </>
+                    }
                     meaning={`${meaning} Score ${toScore(alert.score, 1)}.`}
                     action={action}
                     tone={tone as "teal" | "amber" | "rose"}

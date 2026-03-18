@@ -24,6 +24,7 @@ export const ROUTES: RouteConfig[] = [
   { path: "/profile",   label: "Profile",      icon: "person",         roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 60 },
   { path: "/settings",  label: "Settings",     icon: "settings",       roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 70 },
   { path: "/help",      label: "Help",         icon: "help_outline",   roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 80 },
+  { path: "/employees", label: "Employee Details", icon: "badge",       roles: ["employee", "manager", "admin"], showInSidebar: false },
 
   // Management (manager + admin)
   { path: "/admin/employees",    label: "Employees",       icon: "group",            roles: ["manager", "admin"], showInSidebar: true, group: "management", sidebarOrder: 10 },

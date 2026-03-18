@@ -26,18 +26,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       />
 
       <aside
-        className={`w-72 h-screen glass-panel border-r border-white/30 dark:border-slate-700/40 flex flex-col fixed left-0 top-0 z-40 md:z-30 transform transition-transform duration-200 ${
+        className={`w-72 lg:w-80 h-screen glass-panel border-r border-white/30 dark:border-slate-700/40 flex flex-col fixed left-0 top-0 z-40 md:z-30 transform transition-transform duration-200 ${
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
         {/* Logo / Brand */}
-        <div className="h-16 px-5 flex items-center gap-3 border-b border-white/30 dark:border-slate-700/40 shrink-0">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-600 flex items-center justify-center shadow-md shadow-cyan-500/25">
-            <span className="material-symbols-outlined text-white text-[20px]">monitoring</span>
+        <div className="h-[74px] px-5 flex items-center gap-3 border-b border-white/30 dark:border-slate-700/40 shrink-0">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-600 flex items-center justify-center shadow-md shadow-cyan-500/25">
+            <span className="material-symbols-outlined text-white text-[22px]">monitoring</span>
           </div>
           <div className="min-w-0">
-            <h1 className="text-sm font-bold text-slate-900 dark:text-white truncate section-title">Employee Dashboard</h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 capitalize">{user.role} Workspace</p>
+            <h1 className="text-[15px] font-bold text-slate-900 dark:text-white truncate section-title">Employee Dashboard</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">{user.role} Workspace</p>
           </div>
           <button
             type="button"
@@ -57,7 +57,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             return (
               <div key={groupKey}>
-                <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-3 mb-2">
+                <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-3 mb-2">
                   {group.label}
                 </p>
                 <ul className="space-y-1">
@@ -68,14 +68,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         end={route.path === "/admin"}
                         onClick={onClose}
                         className={({ isActive }) =>
-                          `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+                          `flex items-center gap-3 px-3 py-3 rounded-xl text-[15px] font-medium transition-all duration-150 ${
                             isActive
                               ? "bg-gradient-to-r from-sky-50 to-blue-50 dark:from-blue-900/25 dark:to-cyan-900/20 text-blue-700 dark:text-blue-200 ring-1 ring-sky-200/70 dark:ring-blue-700/35 shadow-sm"
                               : "text-slate-600 dark:text-slate-300 hover:bg-white/45 dark:hover:bg-slate-700/35 hover:text-slate-900 dark:hover:text-white"
                           }`
                         }
                       >
-                        <span className="material-symbols-outlined text-[20px]">{route.icon}</span>
+                        <span className="material-symbols-outlined text-[22px]">{route.icon}</span>
                         <span className="truncate">{route.label}</span>
                       </NavLink>
                     </li>

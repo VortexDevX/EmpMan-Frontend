@@ -22,8 +22,8 @@ export function Layout() {
   return (
     <div className="min-h-screen">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="md:ml-72 min-h-screen">
-        <header className="sticky top-0 z-20 md:hidden glass-panel px-4 h-14 flex items-center gap-3 rounded-none border-x-0 border-t-0">
+      <div className="md:ml-72 lg:ml-80 min-h-screen">
+        <header className="sticky top-0 z-20 md:hidden glass-panel px-4 h-16 flex items-center gap-3 rounded-none border-x-0 border-t-0">
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
@@ -36,11 +36,11 @@ export function Layout() {
             <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Employee Dashboard
             </p>
-            <h1 className="text-sm font-semibold text-slate-900 dark:text-white truncate section-title">{pageTitle}</h1>
+            <h1 className="text-base font-semibold text-slate-900 dark:text-white truncate section-title">{pageTitle}</h1>
           </div>
         </header>
         <main className="min-h-screen">
-          <div className="mx-auto w-full max-w-screen-2xl p-4 sm:p-6 lg:p-8">
+          <div className="mx-auto w-full max-w-none px-4 py-5 sm:px-7 sm:py-7 lg:px-10 lg:py-8 xl:px-12">
             <Outlet />
           </div>
         </main>
