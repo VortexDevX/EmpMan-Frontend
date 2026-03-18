@@ -1,0 +1,39 @@
+📁 frontend/
+├── 📁 public/
+│   └── 📄 vite.svg
+├── 📁 src/
+│   ├── 📁 components/
+│   │   ├── 📄 Layout.tsx
+│   │   ├── 📄 RegisterDeviceModal.tsx
+│   │   └── 📄 Sidebar.tsx
+│   ├── 📁 contexts/
+│   │   └── 📄 AuthContext.tsx
+│   ├── 📁 lib/
+│   │   ├── 📄 api.ts
+│   │   └── 📄 types.ts
+│   ├── 📁 pages/
+│   │   ├── 📄 DashboardPage.tsx
+│   │   ├── 📄 DevicesPage.tsx
+│   │   ├── 📄 HelpPage.tsx
+│   │   ├── 📄 HolidaysPage.tsx
+│   │   ├── 📄 LoginPage.tsx
+│   │   ├── 📄 ProfilePage.tsx
+│   │   ├── 📄 RecommendationsPage.tsx
+│   │   ├── 📄 SurveyPage.tsx
+│   │   ├── 📄 TasksPage.tsx
+│   │   ├── 📄 TeamPage.tsx
+│   │   └── 📄 TelemetryPage.tsx
+│   ├── 📄 App.tsx
+│   ├── 📄 index.css
+│   └── 📄 main.tsx
+├── 📄 .env.example
+├── 📄 .gitignore
+├── 📄 README.md
+├── 📄 build_log.txt
+├── 📄 eslint.config.js
+├── 📄 index.html
+├── 📄 package.json
+├── 📄 tsconfig.app.json
+├── 📄 tsconfig.json
+├── 📄 tsconfig.node.json
+└── 📄 vite.config.ts
