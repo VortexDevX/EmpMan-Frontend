@@ -10,27 +10,28 @@ export interface RouteConfig {
   roles: UserRole[];
   showInSidebar?: boolean;
   group?: "main" | "management" | "admin";
+  sidebarOrder?: number;
 }
 
 // ─── Route Definitions ──────────────────────────────────────
 export const ROUTES: RouteConfig[] = [
   // Main (all authenticated users) — highest priority first
-  { path: "/dashboard", label: "Dashboard",    icon: "dashboard",      roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main" },
-  { path: "/tasks",     label: "My Tasks",     icon: "task_alt",       roles: ["employee", "manager"], showInSidebar: true, group: "main" },
-  { path: "/surveys",   label: "Surveys",      icon: "poll",           roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main" },
-  { path: "/holidays",  label: "Holidays",     icon: "event",          roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main" },
-  { path: "/profile",   label: "Profile",      icon: "person",         roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main" },
-  { path: "/settings",  label: "Settings",     icon: "settings",       roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main" },
-  { path: "/help",      label: "Help",         icon: "help_outline",   roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main" },
-  { path: "/insights",  label: "Insights",     icon: "insights",       roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main" },
+  { path: "/dashboard", label: "Dashboard",    icon: "dashboard",      roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 10 },
+  { path: "/insights",  label: "Insights",     icon: "insights",       roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 20 },
+  { path: "/tasks",     label: "My Tasks",     icon: "task_alt",       roles: ["employee", "manager"], showInSidebar: true, group: "main", sidebarOrder: 30 },
+  { path: "/surveys",   label: "Surveys",      icon: "poll",           roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 40 },
+  { path: "/holidays",  label: "Holidays",     icon: "event",          roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 50 },
+  { path: "/profile",   label: "Profile",      icon: "person",         roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 60 },
+  { path: "/settings",  label: "Settings",     icon: "settings",       roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 70 },
+  { path: "/help",      label: "Help",         icon: "help_outline",   roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 80 },
 
   // Management (manager + admin)
-  { path: "/admin/employees",    label: "Employees",       icon: "group",            roles: ["manager", "admin"], showInSidebar: true, group: "management" },
-  { path: "/tasks/assign",       label: "Assign Task",     icon: "assignment_add",   roles: ["manager", "admin"], showInSidebar: true, group: "management" },
+  { path: "/admin/employees",    label: "Employees",       icon: "group",            roles: ["manager", "admin"], showInSidebar: true, group: "management", sidebarOrder: 10 },
+  { path: "/tasks/assign",       label: "Assign Task",     icon: "assignment_add",   roles: ["manager", "admin"], showInSidebar: true, group: "management", sidebarOrder: 20 },
   { path: "/admin/employees/new",label: "Create Employee", icon: "person_add",       roles: ["manager", "admin"], showInSidebar: false },
 
   // Administration (admin only)
-  { path: "/admin/devices",      label: "Gateway Devices", icon: "router",           roles: ["admin"], showInSidebar: true, group: "admin" },
+  { path: "/admin/devices",      label: "Gateway Devices", icon: "router",           roles: ["admin"], showInSidebar: true, group: "admin", sidebarOrder: 10 },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -61,6 +62,15 @@ export function getSidebarGroups(role: UserRole) {
       groups[group] = { label: groupLabels[group] || group, routes: [] };
     }
     groups[group].routes.push(route);
+  }
+
+  for (const group of Object.values(groups)) {
+    group.routes.sort((a, b) => {
+      const aOrder = a.sidebarOrder ?? 999;
+      const bOrder = b.sidebarOrder ?? 999;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return a.label.localeCompare(b.label);
+    });
   }
 
   return groups;
