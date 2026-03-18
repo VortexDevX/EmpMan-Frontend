@@ -16,7 +16,7 @@ export function Layout() {
       .sort((a, b) => b.path.length - a.path.length)[0];
     if (match?.label) return match.label;
     if (location.pathname.includes("/admin")) return "Administration";
-    return "Portal";
+    return "Employee Dashboard";
   }, [location.pathname]);
 
   return (
@@ -34,7 +34,7 @@ export function Layout() {
           </button>
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Workforce Portal
+              Employee Dashboard
             </p>
             <h1 className="text-sm font-semibold text-slate-900 dark:text-white truncate section-title">{pageTitle}</h1>
           </div>

@@ -1,25 +1,56 @@
-/**
- * Burnout Alerts / Recommendations Page
- */
 import { useQuery } from "@tanstack/react-query";
-import { dashboardApi, predictionsApi, employeesApi } from "../lib/api";
+import { dashboardApi, predictionsApi } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
-import type { BurnoutAlert, Prediction, Employee } from "../lib/types";
+
+function toScore(value: unknown, decimals = 1): string {
+  const num = Number(value);
+  return Number.isFinite(num) ? num.toFixed(decimals) : "0.0";
+}
+
+function AdviceCard({
+  title,
+  meaning,
+  action,
+  tone = "slate",
+}: {
+  title: string;
+  meaning: string;
+  action: string;
+  tone?: "slate" | "teal" | "amber" | "rose";
+}) {
+  const toneClass: Record<string, string> = {
+    slate: "border-slate-200 dark:border-slate-700",
+    teal: "border-emerald-200 dark:border-emerald-800/40",
+    amber: "border-amber-200 dark:border-amber-800/40",
+    rose: "border-rose-200 dark:border-rose-800/40",
+  };
+
+  return (
+    <div className={`surface-card p-5 border ${toneClass[tone]}`}>
+      <h3 className="text-base font-semibold text-slate-900 dark:text-white">{title}</h3>
+      <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
+        <strong>What this means:</strong> {meaning}
+      </p>
+      <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+        <strong>What to do:</strong> {action}
+      </p>
+    </div>
+  );
+}
 
 export function RecommendationsPage() {
   const { user } = useAuth();
-  const isManager = user?.role === "admin" || user?.role === "manager";
+  const isLeadership = user?.role === "admin" || user?.role === "manager";
 
   const { data: burnoutAlerts, isLoading: alertsLoading } = useQuery({
     queryKey: ["burnout-alerts"],
     queryFn: () => dashboardApi.getBurnoutAlerts().then((r) => r.data),
-    enabled: isManager,
+    enabled: isLeadership,
   });
 
   const { data: predictions } = useQuery({
     queryKey: ["my-predictions", user?.employee_id],
-    queryFn: () =>
-      predictionsApi.get(user!.employee_id).then((r) => r.data),
+    queryFn: () => predictionsApi.get(user!.employee_id).then((r) => r.data),
     enabled: !!user?.employee_id,
   });
 
@@ -29,170 +60,117 @@ export function RecommendationsPage() {
     enabled: !!user?.employee_id,
   });
 
-  const { data: employees } = useQuery({
-    queryKey: ["employees"],
-    queryFn: () => employeesApi.list().then((r) => r.data),
-    enabled: isManager,
-  });
-
-  const getEmployeeName = (empId: number) => {
-    if (!Array.isArray(employees)) return `Employee #${empId}`;
-    const emp = employees.find((e: Employee) => e.id === empId);
-    return emp?.full_name || `Employee #${empId}`;
-  };
-
-  const getRiskStyles = (level: string) => {
-    if (level === "critical" || level === "high")
-      return {
-        border: "border-l-rose-500",
-        bg: "bg-rose-50/50 dark:bg-rose-900/10",
-        badge: "bg-rose-100 dark:bg-rose-900/30 text-rose-600",
-        score: "text-rose-600",
-      };
-    if (level === "medium")
-      return {
-        border: "border-l-amber-500",
-        bg: "bg-amber-50/50 dark:bg-amber-900/10",
-        badge: "bg-amber-100 dark:bg-amber-900/30 text-amber-600",
-        score: "text-amber-600",
-      };
-    return {
-      border: "border-l-emerald-500",
-      bg: "bg-emerald-50/50 dark:bg-emerald-900/10",
-      badge: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600",
-      score: "text-emerald-600",
-    };
-  };
+  const alerts = Array.isArray(burnoutAlerts) ? burnoutAlerts : [];
+  const predictionList = Array.isArray(predictions) ? predictions : [];
+  const burnoutRisk = latestPredictions?.burnout?.risk_level || "unknown";
+  const productivityScore = latestPredictions?.productivity?.score;
+  const workloadStatus = latestPredictions?.workload?.future_workload_status || "unknown";
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <span className="material-symbols-outlined text-[24px] text-amber-500">psychology</span>
-          Burnout Alerts & Predictions
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white section-title">
+          {isLeadership ? "Team Insights" : "My Insights"}
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          AI-powered burnout detection and workforce insights
+          Clear interpretation of signals, with direct next actions.
         </p>
       </div>
 
-      {/* Burnout Alerts (Manager/Admin only) */}
-      {isManager && (
-        <div className="bg-white dark:bg-slate-800 rounded-xl ring-1 ring-slate-200/60 dark:ring-slate-700/60 p-6">
-          <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <span className="material-symbols-outlined text-[20px] text-rose-500">warning</span>
-            Team Burnout Alerts
-          </h3>
+      {isLeadership && (
+        <div className="surface-card p-6">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Today’s Team Priorities</h2>
           {alertsLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+            <div className="py-8 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600" />
             </div>
-          ) : Array.isArray(burnoutAlerts) && burnoutAlerts.length > 0 ? (
-            <div className="flex flex-col gap-3">
-              {burnoutAlerts.map((alert: BurnoutAlert, i: number) => {
-                const styles = getRiskStyles(alert.risk_level);
+          ) : alerts.length > 0 ? (
+            <div className="mt-4 space-y-3">
+              {alerts.slice(0, 8).map((alert: any, idx: number) => {
+                const risk = String(alert.risk_level || "unknown").toLowerCase();
+                const tone = risk === "high" || risk === "critical" ? "rose" : risk === "medium" ? "amber" : "teal";
+                const meaning =
+                  tone === "rose"
+                    ? "Employee may be near burnout and needs immediate intervention."
+                    : tone === "amber"
+                      ? "Employee shows moderate pressure signals and needs balancing support."
+                      : "Signal is stable but still worth checking in.";
+                const action =
+                  tone === "rose"
+                    ? "Do a 1:1 check-in today, reduce short-term load, and review deadlines."
+                    : tone === "amber"
+                      ? "Rebalance tasks this sprint and monitor next 3 days."
+                      : "Keep current rhythm and run weekly check-ins.";
+
                 return (
-                  <div
-                    key={i}
-                    className={`p-4 rounded-lg border-l-[3px] ${styles.border} ${styles.bg}`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                          {alert.employee_name || getEmployeeName(alert.employee_id)}
-                        </p>
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          Employee #{alert.employee_id}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {alert.score !== undefined && (
-                          <div className="text-right">
-                            <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Risk Score</span>
-                            <p className={`text-lg font-bold ${styles.score}`}>
-                              {typeof alert.score === "number"
-                                ? alert.score.toFixed(1)
-                                : alert.score}
-                            </p>
-                          </div>
-                        )}
-                        <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${styles.badge}`}>
-                          {alert.risk_level}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                  <AdviceCard
+                    key={idx}
+                    title={`${alert.employee_name || `Employee #${alert.employee_id}`} • Risk ${String(alert.risk_level).toUpperCase()}`}
+                    meaning={`${meaning} Score ${toScore(alert.score, 1)}.`}
+                    action={action}
+                    tone={tone as "teal" | "amber" | "rose"}
+                  />
                 );
               })}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <span className="material-symbols-outlined text-[40px] text-emerald-400">check_circle</span>
-              <p className="text-sm text-slate-400 dark:text-slate-500 mt-2">No burnout alerts — team is healthy!</p>
-            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-3">No active team alerts today.</p>
           )}
         </div>
       )}
 
-      {/* My Predictions */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl ring-1 ring-slate-200/60 dark:ring-slate-700/60 p-6">
-        <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-          <span className="material-symbols-outlined text-[20px] text-blue-500">insights</span>
-          {isManager ? "Your Predictions" : "My Predictions"}
-        </h3>
-        {latestPredictions && (
-          <div className="mb-5 grid grid-cols-1 md:grid-cols-3 gap-3">
-            {["burnout", "productivity", "workload"].map((key) => {
-              const pred = latestPredictions[key as keyof typeof latestPredictions];
-              const risk = pred?.risk_level || "unknown";
-              const styles = getRiskStyles(risk);
-              return (
-                <div key={key} className={`rounded-lg border-l-[3px] p-3 ${styles.border} ${styles.bg}`}>
-                  <p className="text-[11px] uppercase tracking-wide text-slate-400 mb-1">{key}</p>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                    {pred?.score !== undefined && pred?.score !== null ? Number(pred.score).toFixed(2) : "N/A"}
-                  </p>
-                  <p className={`text-xs font-semibold mt-1 ${styles.score}`}>{String(risk).toUpperCase()}</p>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {Array.isArray(predictions) && predictions.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {predictions.map((pred: Prediction) => {
-              const styles = getRiskStyles(pred.risk_level);
-              return (
-                <div key={pred.id} className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 capitalize">
-                      {pred.prediction_type}
-                    </span>
-                    <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${styles.badge}`}>
-                      {pred.risk_level}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Score</span>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                        {pred.score !== undefined && pred.score !== null ? Number(pred.score).toFixed(1) : "N/A"}
-                      </p>
-                    </div>
-                    <span className="text-xs text-slate-400">
-                      {new Date(pred.prediction_date).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="surface-card p-5">
+          <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Burnout Risk</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{String(burnoutRisk).toUpperCase()}</p>
+        </div>
+        <div className="surface-card p-5">
+          <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Productivity</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+            {productivityScore !== undefined && productivityScore !== null ? `${toScore(productivityScore, 1)}%` : "N/A"}
+          </p>
+        </div>
+        <div className="surface-card p-5">
+          <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Workload Status</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{String(workloadStatus).toUpperCase()}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <AdviceCard
+          title="Energy & Burnout"
+          meaning={`Current burnout signal is ${String(burnoutRisk).toUpperCase()}.`}
+          action={
+            String(burnoutRisk).toLowerCase() === "high"
+              ? "Reduce context switching, finish only top-priority work, and schedule a focused recovery block."
+              : "Maintain routine and add one short pause after each heavy work block."
+          }
+          tone={String(burnoutRisk).toLowerCase() === "high" ? "rose" : "teal"}
+        />
+        <AdviceCard
+          title="Output & Focus"
+          meaning={`Recent productivity score is ${productivityScore !== undefined && productivityScore !== null ? `${toScore(productivityScore, 1)}%` : "not available"}.`}
+          action="Pick 1-2 key outcomes for today, close open loops, and defer low-impact tasks."
+          tone="amber"
+        />
+      </div>
+
+      <div className="surface-card p-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Recent Prediction History</h2>
+        {predictionList.length > 0 ? (
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+            {predictionList.slice(0, 9).map((pred: any) => (
+              <div key={pred.id} className="rounded-xl border border-slate-200/70 dark:border-slate-700/60 p-3">
+                <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{pred.prediction_type}</p>
+                <p className="text-lg font-semibold text-slate-900 dark:text-white mt-1">{toScore(pred.score, 1)}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {pred.prediction_date ? new Date(pred.prediction_date).toLocaleDateString() : "No date"}
+                </p>
+              </div>
+            ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <span className="material-symbols-outlined text-[40px] text-slate-300 dark:text-slate-600">insights</span>
-            <p className="text-sm text-slate-400 dark:text-slate-500 mt-2">No predictions available</p>
-          </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-3">No prediction history available yet.</p>
         )}
       </div>
     </div>

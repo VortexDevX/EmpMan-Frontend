@@ -86,14 +86,14 @@ export function LoginPage() {
           
           {/* Header */}
           <div className="px-8 pt-10 pb-2 flex flex-col items-center">
-            <div className="mb-6 h-16 w-16 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600">
-              <span className="material-symbols-outlined text-[32px]">hub</span>
+            <div className="mb-6 h-16 w-16 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-600">
+              <span className="material-symbols-outlined text-[32px]">monitoring</span>
             </div>
             <h2 className="text-slate-900 dark:text-white tracking-tight text-[28px] font-bold leading-tight text-center section-title">
-              Sign in to Workforce OS
+              Sign in to Employee Dashboard
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal text-center mt-2">
-              Workforce Optimization Platform
+              Employee Performance & Operations Portal
             </p>
           </div>
 

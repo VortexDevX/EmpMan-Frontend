@@ -14,9 +14,9 @@
     --text-secondary: #334155;
     --text-muted: #64748b;
 
-    --brand: #0f72e5;
-    --brand-strong: #0b5cc7;
-    --brand-soft: #e3f0ff;
+    --brand: #0f9f9a;
+    --brand-strong: #0b7e7a;
+    --brand-soft: #def8f6;
 
     --surface: rgba(255, 255, 255, 0.74);
     --surface-strong: rgba(255, 255, 255, 0.9);
@@ -33,9 +33,9 @@
     --text-secondary: #cbd5e1;
     --text-muted: #94a3b8;
 
-    --brand: #60a5fa;
-    --brand-strong: #3b82f6;
-    --brand-soft: rgba(59, 130, 246, 0.22);
+    --brand: #34d399;
+    --brand-strong: #10b981;
+    --brand-soft: rgba(16, 185, 129, 0.22);
 
     --surface: rgba(15, 23, 42, 0.56);
     --surface-strong: rgba(15, 23, 42, 0.76);

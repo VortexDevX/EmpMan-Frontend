@@ -32,12 +32,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       >
         {/* Logo / Brand */}
         <div className="h-16 px-5 flex items-center gap-3 border-b border-white/30 dark:border-slate-700/40 shrink-0">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center shadow-md shadow-blue-500/25">
-            <span className="material-symbols-outlined text-white text-[20px]">hub</span>
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-600 flex items-center justify-center shadow-md shadow-cyan-500/25">
+            <span className="material-symbols-outlined text-white text-[20px]">monitoring</span>
           </div>
           <div className="min-w-0">
-            <h1 className="text-sm font-bold text-slate-900 dark:text-white truncate section-title">Workforce OS</h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 capitalize">{user.role} Portal</p>
+            <h1 className="text-sm font-bold text-slate-900 dark:text-white truncate section-title">Employee Dashboard</h1>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 capitalize">{user.role} Workspace</p>
           </div>
           <button
             type="button"

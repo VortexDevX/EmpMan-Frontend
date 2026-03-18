@@ -16,7 +16,7 @@ export interface RouteConfig {
 export const ROUTES: RouteConfig[] = [
   // Main (all authenticated users) — highest priority first
   { path: "/dashboard", label: "Dashboard",    icon: "dashboard",      roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main" },
-  { path: "/tasks",     label: "My Tasks",     icon: "task_alt",       roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main" },
+  { path: "/tasks",     label: "My Tasks",     icon: "task_alt",       roles: ["employee", "manager"], showInSidebar: true, group: "main" },
   { path: "/surveys",   label: "Surveys",      icon: "poll",           roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main" },
   { path: "/holidays",  label: "Holidays",     icon: "event",          roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main" },
   { path: "/profile",   label: "Profile",      icon: "person",         roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main" },

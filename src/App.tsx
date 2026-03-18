@@ -165,7 +165,14 @@ function AppRoutes() {
           path="dashboard"
           element={<DashboardPage />}
         />
-        <Route path="tasks" element={<TasksPage />} />
+        <Route
+          path="tasks"
+          element={
+            <ProtectedRoute roles={["employee", "manager"]}>
+              <TasksPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="surveys" element={<SurveyPage />} />
         <Route path="holidays" element={<HolidaysPage />} />
         <Route path="profile" element={<ProfilePage />} />
