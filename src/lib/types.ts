@@ -84,9 +84,14 @@ export interface Task {
   assigned_by: number;
   department_id: number;
   priority: "low" | "medium" | "high";
-  status: "pending" | "in_progress" | "completed";
+  status: "pending" | "in_progress" | "completed" | "submitted_for_review" | "changes_requested" | "approved" | "rejected";
   due_date: string;
   completed_at: string | null;
+  submitted_for_review_at?: string | null;
+  reviewed_by?: number | null;
+  reviewed_at?: string | null;
+  review_note?: string | null;
+  evidence_refs?: unknown[];
   created_at: string;
 }
 
@@ -202,6 +207,67 @@ export interface CreateTaskRequest {
   department_id?: number;
   priority: "low" | "medium" | "high";
   due_date: string;
+}
+
+export interface AttendanceRecord {
+  id: number;
+  employee_id: number;
+  work_date: string;
+  check_in_at?: string | null;
+  check_out_at?: string | null;
+  status: string;
+  attendance_source: string;
+  work_minutes: number;
+  notes?: string | null;
+}
+
+export interface LeaveType {
+  id: number;
+  code: string;
+  name: string;
+  is_paid: boolean;
+  max_days_per_year: number;
+}
+
+export interface LeaveBalance {
+  id: number;
+  employee_id: number;
+  leave_type_id: number;
+  leave_year: number;
+  allocated_days: number;
+  used_days: number;
+  carry_forward_days: number;
+  adjusted_days: number;
+}
+
+export interface LeaveRequest {
+  id: number;
+  employee_id: number;
+  leave_type_id: number;
+  start_date: string;
+  end_date: string;
+  total_days: number;
+  reason?: string;
+  handover_note?: string;
+  status: "pending" | "approved" | "rejected" | "cancelled" | "withdrawn";
+  requested_at: string;
+  decision_note?: string | null;
+}
+
+export interface PendingApproval {
+  approval_type: "leave" | "task_review";
+  reference_id: number;
+  employee_id: number;
+  employee_code?: string;
+  full_name?: string;
+  submitted_at: string;
+  status: string;
+  priority?: string | null;
+  summary: string;
+  requested_by: number;
+  target_start_date?: string | null;
+  target_end_date?: string | null;
+  meta?: Record<string, unknown>;
 }
 
 // ─── TOTP Registration ──────────────────────────────────────

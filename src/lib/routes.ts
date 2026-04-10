@@ -18,17 +18,20 @@ export const ROUTES: RouteConfig[] = [
   // Main (all authenticated users) — highest priority first
   { path: "/dashboard", label: "Dashboard",    icon: "dashboard",      roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 10 },
   { path: "/insights",  label: "Insights",     icon: "insights",       roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 20 },
-  { path: "/tasks",     label: "My Tasks",     icon: "task_alt",       roles: ["employee", "manager"], showInSidebar: true, group: "main", sidebarOrder: 30 },
-  { path: "/surveys",   label: "Surveys",      icon: "poll",           roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 40 },
-  { path: "/holidays",  label: "Holidays",     icon: "event",          roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 50 },
-  { path: "/profile",   label: "Profile",      icon: "person",         roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 60 },
-  { path: "/settings",  label: "Settings",     icon: "settings",       roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 70 },
-  { path: "/help",      label: "Help",         icon: "help_outline",   roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 80 },
+  { path: "/attendance",label: "Attendance",   icon: "fact_check",     roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 30 },
+  { path: "/leave",     label: "Leave",        icon: "event_available",roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 40 },
+  { path: "/tasks",     label: "My Tasks",     icon: "task_alt",       roles: ["employee", "manager"], showInSidebar: true, group: "main", sidebarOrder: 50 },
+  { path: "/surveys",   label: "Surveys",      icon: "poll",           roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 60 },
+  { path: "/holidays",  label: "Holidays",     icon: "event",          roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 70 },
+  { path: "/profile",   label: "Profile",      icon: "person",         roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 80 },
+  { path: "/settings",  label: "Settings",     icon: "settings",       roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 90 },
+  { path: "/help",      label: "Help",         icon: "help_outline",   roles: ["employee", "manager", "admin"], showInSidebar: true, group: "main", sidebarOrder: 100 },
   { path: "/employees", label: "Employee Details", icon: "badge",       roles: ["employee", "manager", "admin"], showInSidebar: false },
 
   // Management (manager + admin)
   { path: "/admin/employees",    label: "Employees",       icon: "group",            roles: ["manager", "admin"], showInSidebar: true, group: "management", sidebarOrder: 10 },
   { path: "/tasks/assign",       label: "Assign Task",     icon: "assignment_add",   roles: ["manager", "admin"], showInSidebar: true, group: "management", sidebarOrder: 20 },
+  { path: "/approvals",          label: "Approvals",       icon: "approval_delegation", roles: ["manager", "admin"], showInSidebar: true, group: "management", sidebarOrder: 30 },
   { path: "/admin/employees/new",label: "Create Employee", icon: "person_add",       roles: ["manager", "admin"], showInSidebar: false },
 
   // Administration (admin only)

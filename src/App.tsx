@@ -46,6 +46,15 @@ const RecommendationsPage = lazy(() =>
 const EmployeeDetailsPage = lazy(() =>
   import("./pages/EmployeeDetailsPage").then((m) => ({ default: m.EmployeeDetailsPage })),
 );
+const AttendancePage = lazy(() =>
+  import("./pages/AttendancePage").then((m) => ({ default: m.AttendancePage })),
+);
+const LeavePage = lazy(() =>
+  import("./pages/LeavePage").then((m) => ({ default: m.LeavePage })),
+);
+const ApprovalInboxPage = lazy(() =>
+  import("./pages/ApprovalInboxPage").then((m) => ({ default: m.ApprovalInboxPage })),
+);
 
 // Management Pages
 const DashboardPage = lazy(() =>
@@ -176,6 +185,8 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route path="attendance" element={<AttendancePage />} />
+        <Route path="leave" element={<LeavePage />} />
         <Route path="surveys" element={<SurveyPage />} />
         <Route path="holidays" element={<HolidaysPage />} />
         <Route path="profile" element={<ProfilePage />} />
@@ -206,6 +217,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute roles={["manager", "admin"]}>
               <CreateEmployeePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="approvals"
+          element={
+            <ProtectedRoute roles={["manager", "admin"]}>
+              <ApprovalInboxPage />
             </ProtectedRoute>
           }
         />

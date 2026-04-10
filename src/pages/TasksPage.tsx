@@ -1,5 +1,5 @@
 // src/pages/TasksPage.tsx
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { tasksApi } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { PageLoader } from "../components/ui/LoadingSpinner";
 import { EmptyState } from "../components/ui/EmptyState";
+import type { Task } from "../lib/types";
 
 const priorityColors = {
   low: "default",
@@ -18,17 +19,33 @@ const statusColors = {
   pending: "warning",
   in_progress: "info",
   completed: "success",
+  submitted_for_review: "default",
+  changes_requested: "warning",
+  approved: "success",
+  rejected: "danger",
 } as const;
 
 export function TasksPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isManagerOrAdmin = user?.role === "admin" || user?.role === "manager";
 
   const { data: tasks, isLoading, error } = useQuery({
     queryKey: ["tasks", user?.employee_id],
     queryFn: () => tasksApi.getForEmployee(user!.employee_id).then((r) => r.data),
     enabled: !!user?.employee_id,
+  });
+
+  const submitForReview = useMutation({
+    mutationFn: (taskId: number) =>
+      tasksApi.submitForReview(taskId, user!.employee_id, "Submitted for manager/admin review"),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tasks", user?.employee_id] }),
+  });
+
+  const markComplete = useMutation({
+    mutationFn: (taskId: number) => tasksApi.complete(taskId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tasks", user?.employee_id] }),
   });
 
   if (isLoading) return <PageLoader />;
@@ -45,9 +62,9 @@ export function TasksPage() {
     );
   }
 
-  const pendingTasks = tasks?.filter((t: any) => t.status === "pending") || [];
-  const inProgressTasks = tasks?.filter((t: any) => t.status === "in_progress") || [];
-  const completedTasks = tasks?.filter((t: any) => t.status === "completed") || [];
+  const pendingTasks = tasks?.filter((t: Task) => t.status === "pending") || [];
+  const inProgressTasks = tasks?.filter((t: Task) => t.status === "in_progress") || [];
+  const completedTasks = tasks?.filter((t: Task) => ["completed", "approved"].includes(t.status)) || [];
 
   return (
     <div className="space-y-6">
@@ -121,7 +138,7 @@ export function TasksPage() {
           />
         ) : (
           <div className="divide-y divide-slate-200 dark:divide-slate-700">
-            {tasks.map((task: any) => (
+            {tasks.map((task: Task) => (
               <div key={task.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                   <div className="flex-1 min-w-0">
@@ -133,7 +150,7 @@ export function TasksPage() {
                       <Badge variant={priorityColors[task.priority as keyof typeof priorityColors]}>
                         {task.priority}
                       </Badge>
-                      <Badge variant={statusColors[task.status as keyof typeof statusColors]}>
+                      <Badge variant={statusColors[task.status as keyof typeof statusColors] ?? "default"}>
                         {task.status.replace("_", " ")}
                       </Badge>
                       <span className="text-xs text-slate-500">
@@ -141,6 +158,28 @@ export function TasksPage() {
                       </span>
                     </div>
                   </div>
+                  {!isManagerOrAdmin && (
+                    <div className="flex flex-wrap gap-2">
+                      {(task.status === "pending" || task.status === "in_progress" || task.status === "changes_requested") && (
+                        <button
+                          className="btn-secondary"
+                          onClick={() => markComplete.mutate(task.id)}
+                          disabled={markComplete.isPending}
+                        >
+                          Mark Complete
+                        </button>
+                      )}
+                      {(task.status === "completed" || task.status === "changes_requested") && (
+                        <button
+                          className="btn-primary"
+                          onClick={() => submitForReview.mutate(task.id)}
+                          disabled={submitForReview.isPending}
+                        >
+                          Submit for Review
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

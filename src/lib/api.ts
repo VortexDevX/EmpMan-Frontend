@@ -8,6 +8,11 @@ import type {
   RegisterDeviceRequest,
   CreateTaskRequest,
   CreateEmployeeRequest,
+  AttendanceRecord,
+  LeaveType,
+  LeaveBalance,
+  LeaveRequest,
+  PendingApproval,
 } from "./types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://manan.digimeck.in";
@@ -240,6 +245,10 @@ export const tasksApi = {
   updateStatus: (taskId: number, status: string) =>
     api.put(`/api/v1/tasks/${taskId}`, { status }),
   complete: (taskId: number) => api.post(`/api/v1/tasks/${taskId}/complete`),
+  submitForReview: (taskId: number, submitted_by: number, review_note?: string, evidence_refs?: unknown[]) =>
+    api.post(`/api/v1/tasks/${taskId}/submit-review`, { submitted_by, review_note, evidence_refs }),
+  review: (taskId: number, reviewer_id: number, decision: "approved" | "rejected" | "changes_requested", review_note?: string) =>
+    api.post(`/api/v1/tasks/${taskId}/review`, { reviewer_id, decision, review_note }),
   getComments: (taskId: number) =>
     api.get(`/api/v1/tasks/${taskId}/comments`),
   addComment: (taskId: number, authorId: number, message: string) =>
@@ -315,6 +324,46 @@ export const predictionsApi = {
     api.get(`/api/v1/ml/predictions/${employeeId}`),
   getLatest: (employeeId: number) =>
     api.get(`/api/v1/ml/predictions/latest/${employeeId}`),
+};
+
+// ─── Attendance (remote API) ─────────────────────────────────
+export const attendanceApi = {
+  checkIn: (employee_id: number, notes?: string) =>
+    api.post<AttendanceRecord>("/api/v1/attendance/check-in", { employee_id, notes }),
+  checkOut: (employee_id: number, notes?: string) =>
+    api.post<AttendanceRecord>("/api/v1/attendance/check-out", { employee_id, notes }),
+  getForEmployee: (employeeId: number, from_date?: string, to_date?: string) =>
+    api.get<AttendanceRecord[]>(`/api/v1/attendance/employee/${employeeId}`, { params: { from_date, to_date } }),
+  getTeamForDate: (work_date?: string) =>
+    api.get<AttendanceRecord[]>("/api/v1/attendance/team", { params: { work_date } }),
+};
+
+// ─── Leave (remote API) ──────────────────────────────────────
+export const leaveApi = {
+  listTypes: () => api.get<LeaveType[]>("/api/v1/leave/types"),
+  getBalances: (employeeId: number, year?: number) =>
+    api.get<LeaveBalance[]>(`/api/v1/leave/balances/${employeeId}`, { params: { year } }),
+  listRequests: (params?: { employee_id?: number; status?: string }) =>
+    api.get<LeaveRequest[]>("/api/v1/leave/requests", { params }),
+  createRequest: (data: {
+    employee_id: number;
+    leave_type_id: number;
+    start_date: string;
+    end_date: string;
+    reason?: string;
+    handover_note?: string;
+  }) => api.post<LeaveRequest>("/api/v1/leave/requests", data),
+  approve: (requestId: number, decided_by: number, decision_note?: string) =>
+    api.post<LeaveRequest>(`/api/v1/leave/requests/${requestId}/approve`, { decided_by, decision_note }),
+  reject: (requestId: number, decided_by: number, decision_note?: string) =>
+    api.post<LeaveRequest>(`/api/v1/leave/requests/${requestId}/reject`, { decided_by, decision_note }),
+  cancel: (requestId: number, cancelled_by: number, reason?: string) =>
+    api.post<LeaveRequest>(`/api/v1/leave/requests/${requestId}/cancel`, { cancelled_by, reason }),
+};
+
+// ─── Approvals (remote API) ──────────────────────────────────
+export const approvalsApi = {
+  listPending: () => api.get<PendingApproval[]>("/api/v1/approvals/pending"),
 };
 
 // ─── Health (remote API) ─────────────────────────────────────
