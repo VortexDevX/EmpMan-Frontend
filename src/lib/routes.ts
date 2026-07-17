@@ -32,7 +32,7 @@ export const ROUTES: RouteConfig[] = [
   { path: "/admin/employees",    label: "Employees",       icon: "group",            roles: ["manager", "admin"], showInSidebar: true, group: "management", sidebarOrder: 10 },
   { path: "/tasks/assign",       label: "Assign Task",     icon: "assignment_add",   roles: ["manager", "admin"], showInSidebar: true, group: "management", sidebarOrder: 20 },
   { path: "/approvals",          label: "Approvals",       icon: "approval_delegation", roles: ["manager", "admin"], showInSidebar: true, group: "management", sidebarOrder: 30 },
-  { path: "/admin/employees/new",label: "Create Employee", icon: "person_add",       roles: ["manager", "admin"], showInSidebar: false },
+  { path: "/admin/employees/new",label: "Create Employee", icon: "person_add",       roles: ["admin"], showInSidebar: false },
 
   // Administration (admin only)
   { path: "/admin/devices",      label: "Gateway Devices", icon: "router",           roles: ["admin"], showInSidebar: true, group: "admin", sidebarOrder: 10 },
@@ -41,6 +41,7 @@ export const ROUTES: RouteConfig[] = [
 // ─── Helpers ─────────────────────────────────────────────────
 
 export function getDefaultRoute(_role: UserRole): string {
+  // Dashboard is intentionally the default landing page for every role.
   return "/dashboard";
 }
 

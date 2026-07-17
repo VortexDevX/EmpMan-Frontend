@@ -3,12 +3,13 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { authApi } from "../lib/api";
 import { getDefaultRoute, type UserRole } from "../lib/routes";
+import { AuthCard, AuthPage } from "../components/ui/AuthLayout";
+import { FormAlert } from "../components/ui/FormLayout";
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginWithoutTotp } = useAuth();
 
   const [employeeCode, setEmployeeCode] = useState("");
   const [password, setPassword] = useState("");
@@ -23,6 +24,15 @@ export function LoginPage() {
     setLoading(true);
 
     try {
+      const preflight = await loginWithoutTotp(employeeCode, password);
+      if (preflight.needsTotp) {
+        navigate("/setup-totp");
+        return;
+      }
+      if (totpCode.length !== 6) {
+        setError("Enter the 6-digit code from your authenticator app.");
+        return;
+      }
       await login(employeeCode, password, totpCode);
       
       // Read role from localStorage (set by login function)
@@ -33,30 +43,8 @@ export function LoginPage() {
     } catch (err: any) {
       console.error("[Login] Error:", err);
       
-      if (err.response?.status === 404) {
-        setError("Employee not found. Check your employee code.");
-      } else if (err.response?.status === 401) {
+      if (err.response?.status === 401) {
         setError("Invalid password or authenticator code.");
-      } else if (err.response?.status === 400) {
-        const detail = err.response?.data?.detail;
-        if (typeof detail === "string" && detail.includes("TOTP not registered")) {
-          // Redirect to TOTP setup page
-          // We need to get the employee ID first
-          try {
-            const empRes = await authApi.getEmployeeByCode(employeeCode);
-            const empId = empRes.data.id;
-            // Store pending employee ID for TOTP setup
-            sessionStorage.setItem("pending_totp_employee_id", String(empId));
-            navigate("/setup-totp");
-            return;
-          } catch {
-            setError("TOTP not set up. Please contact your administrator.");
-          }
-        } else if (typeof detail === "string" && detail.includes("Password not set")) {
-          setError("Password not set. Contact administrator.");
-        } else {
-          setError(detail || "Login failed.");
-        }
       } else {
         const detail = err.response?.data?.detail;
         if (Array.isArray(detail)) {
@@ -73,37 +61,33 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Background Decoration */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-500/5 blur-[120px]"></div>
-        <div className="absolute top-[40%] -right-[10%] w-[40%] h-[40%] rounded-full bg-blue-400/5 blur-[100px]"></div>
-      </div>
-
-      {/* Main Content */}
+    <AuthPage>
       <main className="flex-1 flex items-center justify-center p-4 z-10 pb-8">
-        <div className="w-full max-w-[440px] glass-panel rounded-2xl overflow-hidden">
-          
-          {/* Header */}
-          <div className="px-8 pt-10 pb-2 flex flex-col items-center">
-            <div className="mb-6 h-16 w-16 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-600">
-              <span className="material-symbols-outlined text-[32px]">monitoring</span>
-            </div>
-            <h2 className="text-slate-900 dark:text-white tracking-tight text-[28px] font-bold leading-tight text-center section-title">
-              Sign in to Employee Dashboard
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal text-center mt-2">
-              Employee Performance & Operations Portal
-            </p>
-          </div>
-
-          {/* Form */}
-          <div className="px-8 py-6 w-full">
-            {error && (
-              <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm flex items-start gap-2">
-                <span className="material-symbols-outlined text-[18px] mt-0.5 shrink-0">error</span>
-                <span>{error}</span>
+        <AuthCard
+          icon="monitoring"
+          title="Sign in to Employee Dashboard"
+          subtitle="Employee Performance & Operations Portal"
+          footer={
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex items-start gap-2 max-w-[320px]">
+                <span className="material-symbols-outlined text-slate-400 text-[18px] mt-0.5 shrink-0">
+                  security
+                </span>
+                <p className="text-xs text-slate-500 dark:text-slate-400 text-center leading-relaxed">
+                  Two-factor authentication is required for all logins.
+                </p>
               </div>
+              <a
+                href="#"
+                className="text-sm font-semibold text-primary-700 dark:text-primary-300 hover:text-primary-800 dark:hover:text-primary-200 hover:underline transition-all flex items-center gap-1"
+              >
+                Need help signing in?
+              </a>
+            </div>
+          }
+        >
+            {error && (
+              <FormAlert tone="error">{error}</FormAlert>
             )}
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
@@ -120,7 +104,7 @@ export function LoginPage() {
                   required
                   autoFocus
                   autoComplete="username"
-                  className="w-full h-12 px-4 rounded-lg border border-slate-300/80 dark:border-slate-600 bg-white/80 dark:bg-slate-800/70 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500 transition-all duration-200"
+                  className="input-shell w-full h-12 px-4"
                 />
               </label>
 
@@ -137,7 +121,7 @@ export function LoginPage() {
                     placeholder="••••••••"
                     required
                     autoComplete="current-password"
-                    className="w-full h-12 px-4 pr-12 rounded-lg border border-slate-300/80 dark:border-slate-600 bg-white/80 dark:bg-slate-800/70 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500 transition-all duration-200"
+                    className="input-shell w-full h-12 px-4 pr-12"
                   />
                   <button
                     type="button"
@@ -164,8 +148,7 @@ export function LoginPage() {
                   maxLength={6}
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  required
-                  className="w-full h-12 px-4 rounded-lg border border-slate-300/80 dark:border-slate-600 bg-white/80 dark:bg-slate-800/70 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500 transition-all duration-200 text-center text-xl tracking-[0.3em] font-mono"
+                  className="input-shell w-full h-12 px-4 text-center text-xl font-mono"
                 />
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
                   Enter 6-digit code from Google Authenticator
@@ -175,8 +158,8 @@ export function LoginPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading || totpCode.length !== 6}
-                className="mt-2 w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:from-blue-400 disabled:to-blue-400 disabled:cursor-not-allowed text-white font-medium h-12 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 group"
+                disabled={loading}
+                className="btn-primary mt-2 w-full h-12 disabled:opacity-55 disabled:cursor-not-allowed group"
               >
                 {loading ? (
                   <>
@@ -196,28 +179,7 @@ export function LoginPage() {
                 )}
               </button>
             </form>
-          </div>
-
-          {/* Footer */}
-          <div className="glass-soft px-6 sm:px-8 py-6 border-t border-white/30 dark:border-slate-700/50">
-            <div className="flex flex-col items-center gap-3">
-              <div className="flex items-start gap-2 max-w-[320px]">
-                <span className="material-symbols-outlined text-slate-400 text-[18px] mt-0.5 shrink-0">
-                  security
-                </span>
-                <p className="text-xs text-slate-500 dark:text-slate-400 text-center leading-relaxed">
-                  Two-factor authentication is required for all logins.
-                </p>
-              </div>
-              <a
-                href="#"
-                className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline transition-all flex items-center gap-1"
-              >
-                Need help signing in?
-              </a>
-            </div>
-          </div>
-        </div>
+        </AuthCard>
       </main>
 
       {/* Bottom Links */}
@@ -228,6 +190,6 @@ export function LoginPage() {
           <a href="#" className="hover:text-slate-800 dark:hover:text-white transition-colors">Support</a>
         </div>
       </div>
-    </div>
+    </AuthPage>
   );
 }

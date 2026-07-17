@@ -79,7 +79,7 @@ export function TasksPage() {
         {isManagerOrAdmin && (
           <button
             onClick={() => navigate("/tasks/assign")}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium h-10 px-4 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto"
+            className="btn-primary h-10 w-full sm:w-auto"
           >
             <span className="material-symbols-outlined text-[18px]">assignment_add</span>
             Assign Task
@@ -91,7 +91,7 @@ export function TasksPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         <Card className="glass-panel border-amber-200/60 dark:border-amber-800/40">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-amber-100 dark:bg-amber-900/40 rounded-xl">
+            <div className="p-3 bg-amber-100 dark:bg-amber-900/40 rounded-lg">
               <span className="material-symbols-outlined text-amber-600">pending</span>
             </div>
             <div>
@@ -102,7 +102,7 @@ export function TasksPage() {
         </Card>
         <Card className="glass-panel border-blue-200/60 dark:border-blue-800/40">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/40 rounded-xl">
+            <div className="p-3 bg-primary-100 dark:bg-primary-900/40 rounded-lg">
               <span className="material-symbols-outlined text-blue-600">autorenew</span>
             </div>
             <div>

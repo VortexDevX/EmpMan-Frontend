@@ -17,6 +17,9 @@ const LoginPage = lazy(() =>
 const SetupTotpPage = lazy(() =>
   import("./pages/SetupTotpPage").then((m) => ({ default: m.SetupTotpPage })),
 );
+const ResetPasswordPage = lazy(() =>
+  import("./pages/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage })),
+);
 
 // Shared Pages
 const TasksPage = lazy(() =>
@@ -159,6 +162,7 @@ function AppRoutes() {
         path="/setup-totp"
         element={<SetupTotpPage />}
       />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       {/* ─── Authenticated Routes ──────────────────────── */}
       <Route
@@ -215,7 +219,7 @@ function AppRoutes() {
         <Route
           path="admin/employees/new"
           element={
-            <ProtectedRoute roles={["manager", "admin"]}>
+            <ProtectedRoute roles={["admin"]}>
               <CreateEmployeePage />
             </ProtectedRoute>
           }

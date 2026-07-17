@@ -52,7 +52,7 @@ export function SurveyPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2 section-title">
-          <span className="material-symbols-outlined text-[24px] text-blue-500">rate_review</span>
+          <span className="material-symbols-outlined text-[24px] text-primary-600 dark:text-primary-400">rate_review</span>
           Weekly Survey
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -62,7 +62,7 @@ export function SurveyPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Survey Form */}
-        <div className="glass-panel rounded-xl p-6">
+        <div className="surface-card p-6">
           <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-5">Submit Feedback</h3>
 
           {submitted && (
@@ -89,7 +89,7 @@ export function SurveyPage() {
                 max={10}
                 value={satisfaction}
                 onChange={(e) => setSatisfaction(Number(e.target.value))}
-                className="w-full accent-blue-600 h-2"
+                className="w-full accent-primary-600 h-2"
               />
             </div>
 
@@ -109,7 +109,7 @@ export function SurveyPage() {
                 max={5}
                 value={workload}
                 onChange={(e) => setWorkload(Number(e.target.value))}
-                className="w-full accent-blue-600 h-2"
+                className="w-full accent-primary-600 h-2"
               />
             </div>
 
@@ -129,7 +129,7 @@ export function SurveyPage() {
                 max={5}
                 value={balance}
                 onChange={(e) => setBalance(Number(e.target.value))}
-                className="w-full accent-blue-600 h-2"
+                className="w-full accent-primary-600 h-2"
               />
             </div>
 
@@ -139,7 +139,7 @@ export function SurveyPage() {
                 Additional Comments (optional)
               </label>
               <textarea
-                className="w-full h-20 px-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm resize-vertical"
+                className="input-shell w-full h-20 px-3 py-2.5 text-sm resize-vertical"
                 placeholder="Any feedback or suggestions..."
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
@@ -147,7 +147,7 @@ export function SurveyPage() {
             </div>
 
             <button
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium h-11 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
+              className="btn-primary w-full disabled:opacity-55 disabled:cursor-not-allowed"
               onClick={() => submitMutation.mutate()}
               disabled={submitMutation.isPending}
             >
@@ -164,7 +164,7 @@ export function SurveyPage() {
         </div>
 
         {/* Survey History */}
-        <div className="glass-panel rounded-xl p-6">
+        <div className="surface-card p-6">
           <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-5">Survey History</h3>
 
           {historyLoading ? (

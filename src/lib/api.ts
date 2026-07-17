@@ -16,8 +16,6 @@ import type {
 } from "./types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://manan.digimeck.in";
-const WEB_API_KEY = import.meta.env.VITE_WEB_API_KEY || "";
-const ADMIN_API_KEY = import.meta.env.VITE_ADMIN_API_KEY || "";
 const GATEWAY_API_URL = import.meta.env.VITE_GATEWAY_API_URL || "";
 const GATEWAY_WITH_CREDENTIALS = import.meta.env.VITE_GATEWAY_WITH_CREDENTIALS !== "false";
 const APP_BASE_PATH = import.meta.env.BASE_URL.endsWith("/")
@@ -26,17 +24,13 @@ const APP_BASE_PATH = import.meta.env.BASE_URL.endsWith("/")
 
 if (import.meta.env.DEV) {
   console.log("[API] Base URL:", API_BASE_URL);
-  console.log("[API] API Key configured:", !!WEB_API_KEY);
   console.log("[API] Gateway URL:", GATEWAY_API_URL || "(same-origin)");
 }
 
 // ── Remote API (workforce management server) ─────────────────
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-    ...(WEB_API_KEY ? { "X-API-Key": WEB_API_KEY } : {}),
-  },
+  headers: { "Content-Type": "application/json" },
   timeout: 30000,
 });
 
@@ -59,24 +53,6 @@ api.interceptors.request.use((config) => {
     }
 
     config.url = normalized;
-  }
-
-  // For privileged employee-management routes, use ADMIN API key when
-  // logged in as admin/manager. Backend role checks are key-based.
-  try {
-    const userRaw = localStorage.getItem("auth_user");
-    const user = userRaw ? JSON.parse(userRaw) as { role?: string } : null;
-    const isPrivilegedUser = user?.role === "admin" || user?.role === "manager";
-    const url = String(config.url || "");
-    const isEmployeeMgmtRoute =
-      url.startsWith("/api/v1/employees") ||
-      url.startsWith("/api/v1/devices/employee/");
-
-    if (isPrivilegedUser && isEmployeeMgmtRoute && ADMIN_API_KEY) {
-      config.headers["X-API-Key"] = ADMIN_API_KEY;
-    }
-  } catch {
-    // Ignore localStorage parse errors and keep default key.
   }
 
   const token = localStorage.getItem("access_token");
@@ -114,25 +90,78 @@ export const localApi = axios.create({
   timeout: 15000,
 });
 
+let gatewayCsrfToken: string | null = null;
+let gatewayCsrfRequest: Promise<string> | null = null;
+
+async function getGatewayCsrfToken(): Promise<string> {
+  if (gatewayCsrfToken) return gatewayCsrfToken;
+
+  if (!gatewayCsrfRequest) {
+    const csrfUrl = `${GATEWAY_API_URL}/api/v1/auth/csrf`;
+    gatewayCsrfRequest = axios
+      .get<{ csrf_token: string }>(csrfUrl, {
+        withCredentials: GATEWAY_WITH_CREDENTIALS,
+        timeout: 15000,
+      })
+      .then(({ data }) => {
+        if (!data.csrf_token) throw new Error("Gateway returned an empty CSRF token");
+        gatewayCsrfToken = data.csrf_token;
+        return data.csrf_token;
+      })
+      .finally(() => {
+        gatewayCsrfRequest = null;
+      });
+  }
+
+  return gatewayCsrfRequest;
+}
+
+localApi.interceptors.request.use(async (config) => {
+  const method = config.method?.toLowerCase();
+  if (method && ["post", "put", "patch", "delete"].includes(method)) {
+    config.headers.set("X-CSRFToken", await getGatewayCsrfToken());
+  }
+  return config;
+});
+
+localApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      error.response?.status === 400 &&
+      String(error.response?.data || "").includes("CSRF")
+    ) {
+      gatewayCsrfToken = null;
+    }
+    return Promise.reject(error);
+  },
+);
+
 // ─── Auth API ────────────────────────────────────────────────
 export const authApi = {
-  /**
-   * Get employee by code - returns employee object with id
-   */
-  getEmployeeByCode: (employee_code: string) =>
-    api.get<{
-      id: number;
+  exchange: (code: string) =>
+    api.post<{
+      access_token: string;
+      token_type: string;
+      employee_id: number;
       employee_code: string;
-      full_name: string;
       role: string;
-      is_active: boolean;
-    }>(`/api/v1/employees/by-code/${employee_code}`),
+      full_name: string;
+    }>("/api/v1/auth/exchange", { code }),
+
+  preflight: (employee_code: string, password: string) =>
+    api.post<{
+      employee_id: number;
+      employee_code: string;
+      totp_required: boolean;
+      setup_token?: string;
+    }>("/api/v1/auth/preflight", { employee_code, password }),
 
   /**
    * Login with employee_id + password + totp_code (all required)
    * Returns JWT token
    */
-  login: (employee_id: number, password: string, totp_code: string) =>
+  login: (employee_code: string, password: string, totp_code: string) =>
     api.post<{
       access_token: string;
       token_type: string;
@@ -141,7 +170,7 @@ export const authApi = {
       role: string;
       full_name: string;
     }>("/api/v1/auth/login", {
-      employee_id,
+      employee_code,
       password,
       totp_code,
     }),
@@ -149,54 +178,58 @@ export const authApi = {
   /**
    * Verify TOTP only (for checking if TOTP is set up)
    */
-  verify: (employee_id: number, totp_code: string) =>
-    api.post("/api/v1/auth/verify", {
-      employee_id,
-      totp_code,
-    }),
-
   /**
    * Register TOTP - generates QR code
    */
-  register: (employee_id: number) =>
+  register: (setup_token: string) =>
     api.post<{
       employee_id: number;
       employee_code: string;
       totp_secret: string;
       qr_code_url: string;
+      confirmation_token: string;
       message: string;
     }>("/api/v1/auth/register", {
-      employee_id,
+      setup_token,
     }),
+
+  confirmTotp: (confirmation_token: string, totp_code: string) =>
+    api.post("/api/v1/auth/confirm-totp", { confirmation_token, totp_code }),
 
   /**
    * Logout - marks session as inactive
    */
-  logout: (employee_id?: number) =>
-    api.post("/api/v1/auth/logout", employee_id ? { employee_id } : {}),
+  logout: () => api.post("/api/v1/auth/logout"),
 
   /**
    * Change password
    */
-  changePassword: (employee_id: number, current_password: string, new_password: string) =>
+  changePassword: (current_password: string, new_password: string) =>
     api.post("/api/v1/auth/change-password", {
-      employee_id,
       current_password,
       new_password,
     }),
+
+  resetPassword: (token_id: string, token: string, new_password: string) =>
+    api.post("/api/v1/auth/reset-password", { token_id, token, new_password }),
 };
 
-// ─── Gateway Device Management (local Flask) ─────────────────
-export const gatewayApi = {
+const gatewayRuntimeApi = {
   getConnected: () => localApi.get("/admin/api/connected"),
   getStats: () => localApi.get("/admin/api/stats"),
-  disconnect: (mac: string, employee_id?: number) =>
-    localApi.post("/admin/api/disconnect", { mac, employee_id }),
+  disconnect: (mac: string, employeeId?: number) =>
+    localApi.post("/admin/api/disconnect", { mac, employee_id: employeeId }),
   block: (mac: string) => localApi.post("/admin/api/block", { mac }),
   unblock: (mac: string) => localApi.post("/admin/api/unblock", { mac }),
   kickAll: () => localApi.post("/admin/api/kick-all"),
   getLogs: (lines?: number) =>
     localApi.get(`/admin/api/logs?lines=${lines || 200}`),
+  getHealth: () => localApi.get("/admin/api/health"),
+};
+
+// ─── Gateway Device Management (local Flask) ─────────────────
+export const gatewayApi = {
+  ...gatewayRuntimeApi,
   deleteDevice: (deviceId: number) =>
     localApi.delete(`/admin/api/devices/${deviceId}/delete`),
   // Employee-specific detail views can come from the remote Employee API.
@@ -204,7 +237,6 @@ export const gatewayApi = {
     api.get(`/api/v1/telemetry/sessions/employee/${employeeId}`),
   getEmployeeDevices: (employeeId: number) =>
     api.get(`/api/v1/devices/employee/${employeeId}`),
-  getHealth: () => localApi.get("/admin/api/health"),
 };
 
 // ─── Status (local Flask) ────────────────────────────────────
@@ -236,23 +268,18 @@ export const tasksApi = {
     api.get(`/api/v1/tasks/employee/${employeeId}`),
   getAll: () => api.get("/api/v1/tasks/"),
   get: (taskId: number) => api.get(`/api/v1/tasks/${taskId}`),
-  create: (data: CreateTaskRequest) => {
-    const { assigned_by, ...taskData } = data;
-    return api.post("/api/v1/tasks/", taskData, {
-      params: { assigned_by },
-    });
-  },
+  create: (data: CreateTaskRequest) => api.post("/api/v1/tasks/", data),
   updateStatus: (taskId: number, status: string) =>
     api.put(`/api/v1/tasks/${taskId}`, { status }),
   complete: (taskId: number) => api.post(`/api/v1/tasks/${taskId}/complete`),
-  submitForReview: (taskId: number, submitted_by: number, review_note?: string, evidence_refs?: unknown[]) =>
-    api.post(`/api/v1/tasks/${taskId}/submit-review`, { submitted_by, review_note, evidence_refs }),
-  review: (taskId: number, reviewer_id: number, decision: "approved" | "rejected" | "changes_requested", review_note?: string) =>
-    api.post(`/api/v1/tasks/${taskId}/review`, { reviewer_id, decision, review_note }),
+  submitForReview: (taskId: number, _submittedBy: number, review_note?: string, evidence_refs?: unknown[]) =>
+    api.post(`/api/v1/tasks/${taskId}/submit-review`, { review_note, evidence_refs }),
+  review: (taskId: number, _reviewerId: number, decision: "approved" | "rejected" | "changes_requested", review_note?: string) =>
+    api.post(`/api/v1/tasks/${taskId}/review`, { decision, review_note }),
   getComments: (taskId: number) =>
     api.get(`/api/v1/tasks/${taskId}/comments`),
-  addComment: (taskId: number, authorId: number, message: string) =>
-    api.post(`/api/v1/tasks/${taskId}/comments?author_id=${authorId}`, {
+  addComment: (taskId: number, _authorId: number, message: string) =>
+    api.post(`/api/v1/tasks/${taskId}/comments`, {
       message,
     }),
 };
@@ -272,15 +299,7 @@ export const adminApi = {
   deleteEmployee: (id: number) =>
     api.delete(`/api/v1/employees/${id}`),
   // Gateway runtime actions remain on local gateway API.
-  getConnected: () => localApi.get("/admin/api/connected"),
-  getStats: () => localApi.get("/admin/api/stats"),
-  disconnect: (mac: string, employeeId?: number) =>
-    localApi.post("/admin/api/disconnect", { mac, employee_id: employeeId }),
-  block: (mac: string) => localApi.post("/admin/api/block", { mac }),
-  unblock: (mac: string) => localApi.post("/admin/api/unblock", { mac }),
-  kickAll: () => localApi.post("/admin/api/kick-all"),
-  getLogs: (lines?: number) => localApi.get(`/admin/api/logs?lines=${lines || 200}`),
-  getHealth: () => localApi.get("/admin/api/health"),
+  ...gatewayRuntimeApi,
 };
 
 // ─── Surveys (remote API) ────────────────────────────────────
@@ -353,12 +372,12 @@ export const leaveApi = {
     reason?: string;
     handover_note?: string;
   }) => api.post<LeaveRequest>("/api/v1/leave/requests", data),
-  approve: (requestId: number, decided_by: number, decision_note?: string) =>
-    api.post<LeaveRequest>(`/api/v1/leave/requests/${requestId}/approve`, { decided_by, decision_note }),
-  reject: (requestId: number, decided_by: number, decision_note?: string) =>
-    api.post<LeaveRequest>(`/api/v1/leave/requests/${requestId}/reject`, { decided_by, decision_note }),
-  cancel: (requestId: number, cancelled_by: number, reason?: string) =>
-    api.post<LeaveRequest>(`/api/v1/leave/requests/${requestId}/cancel`, { cancelled_by, reason }),
+  approve: (requestId: number, _decidedBy: number, decision_note?: string) =>
+    api.post<LeaveRequest>(`/api/v1/leave/requests/${requestId}/approve`, { decision_note }),
+  reject: (requestId: number, _decidedBy: number, decision_note?: string) =>
+    api.post<LeaveRequest>(`/api/v1/leave/requests/${requestId}/reject`, { decision_note }),
+  cancel: (requestId: number, _cancelledBy: number, reason?: string) =>
+    api.post<LeaveRequest>(`/api/v1/leave/requests/${requestId}/cancel`, { reason }),
 };
 
 // ─── Approvals (remote API) ──────────────────────────────────
@@ -368,7 +387,7 @@ export const approvalsApi = {
 
 // ─── Health (remote API) ─────────────────────────────────────
 export const healthApi = {
-  check: () => api.get("/health"),
+  check: () => api.get("/api/v1/health"),
 };
 
 export default api;

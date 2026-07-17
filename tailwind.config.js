@@ -10,16 +10,16 @@ export default {
     extend: {
       colors: {
         primary: {
-          50: "#eff6ff",
-          100: "#dbeafe",
-          200: "#bfdbfe",
-          300: "#93c5fd",
-          400: "#60a5fa",
-          500: "#3b82f6",
-          600: "#2563eb",
-          700: "#1d4ed8",
-          800: "#1e40af",
-          900: "#1e3a8a",
+          50: "#ecfdf9",
+          100: "#ccfbef",
+          200: "#99f6df",
+          300: "#5eeace",
+          400: "#2dd4bf",
+          500: "#14b8a6",
+          600: "#0f766e",
+          700: "#0f5f59",
+          800: "#11504c",
+          900: "#13423f",
         },
         background: {
           light: "#f8fafc",
@@ -27,7 +27,7 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["IBM Plex Sans", "system-ui", "sans-serif"],
       },
     },
   },

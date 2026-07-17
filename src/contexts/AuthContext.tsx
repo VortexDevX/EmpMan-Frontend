@@ -1,5 +1,4 @@
-// src/contexts/AuthContext.tsx
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { authApi } from "../lib/api";
 import type { AuthUser } from "../lib/types";
 
@@ -9,8 +8,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   needsTotpSetup: boolean;
   pendingEmployeeId: number | null;
-  login: (employee_code: string, password: string, totp_code: string) => Promise<void>;
-  loginWithoutTotp: (employee_code: string, password: string) => Promise<{ needsTotp: boolean; employeeId: number }>;
+  pendingSetupToken: string | null;
+  login: (employeeCode: string, password: string, totpCode: string) => Promise<void>;
+  loginWithoutTotp: (employeeCode: string, password: string) => Promise<{ needsTotp: boolean; employeeId: number }>;
   logout: () => void;
   clearTotpSetup: () => void;
 }
@@ -20,153 +20,135 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const STORAGE_KEYS = {
   TOKEN: "access_token",
   USER: "auth_user",
+  TOTP_SETUP_TOKEN: "totp_setup_token",
+  TOTP_EMPLOYEE_ID: "totp_employee_id",
 } as const;
+
 const APP_BASE_PATH = import.meta.env.BASE_URL.endsWith("/")
   ? import.meta.env.BASE_URL.slice(0, -1) || ""
   : import.meta.env.BASE_URL;
 
 function parseHashParams(hash: string): Record<string, string> {
   if (!hash || hash.length <= 1) return {};
-  const hashString = hash.startsWith("#") ? hash.slice(1) : hash;
   const params: Record<string, string> = {};
-  for (const pair of hashString.split("&")) {
+  for (const pair of hash.replace(/^#/, "").split("&")) {
     const [key, value] = pair.split("=");
-    if (key && value !== undefined) {
-      try {
-        params[decodeURIComponent(key)] = decodeURIComponent(value.replace(/\+/g, " "));
-      } catch {
-        params[key] = value;
-      }
+    if (!key || value === undefined) continue;
+    try {
+      params[decodeURIComponent(key)] = decodeURIComponent(value.replace(/\+/g, " "));
+    } catch {
+      params[key] = value;
     }
   }
   return params;
 }
 
-function cleanUrlHash(): void {
-  if (window.location.hash) {
-    const cleanUrl = window.location.pathname + window.location.search;
-    window.history.replaceState(null, document.title, cleanUrl);
-  }
+function clearSetupStorage(): void {
+  sessionStorage.removeItem(STORAGE_KEYS.TOTP_SETUP_TOKEN);
+  sessionStorage.removeItem(STORAGE_KEYS.TOTP_EMPLOYEE_ID);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const storedSetupToken = sessionStorage.getItem(STORAGE_KEYS.TOTP_SETUP_TOKEN);
+  const storedEmployeeId = sessionStorage.getItem(STORAGE_KEYS.TOTP_EMPLOYEE_ID);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [needsTotpSetup, setNeedsTotpSetup] = useState(false);
-  const [pendingEmployeeId, setPendingEmployeeId] = useState<number | null>(null);
+  const [needsTotpSetup, setNeedsTotpSetup] = useState(Boolean(storedSetupToken));
+  const [pendingEmployeeId, setPendingEmployeeId] = useState<number | null>(
+    storedEmployeeId ? Number(storedEmployeeId) : null,
+  );
+  const [pendingSetupToken, setPendingSetupToken] = useState<string | null>(storedSetupToken);
 
   useEffect(() => {
-    const initializeAuth = () => {
+    const initialize = async () => {
       try {
-        // Check for SSO token in URL hash
-        const hash = window.location.hash;
-        if (hash && hash.includes("token=")) {
-          const params = parseHashParams(hash);
-          const token = params.token;
-          if (token && params.employee_id) {
-            localStorage.setItem(STORAGE_KEYS.TOKEN, token);
-            const authUser: AuthUser = {
-              employee_id: parseInt(params.employee_id, 10),
-              employee_code: params.employee_code || "",
-              role: (params.role as AuthUser["role"]) || "employee",
-              full_name: params.full_name || "",
-            };
-            localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(authUser));
-            setUser(authUser);
-            cleanUrlHash();
-            setIsLoading(false);
-            return;
-          }
+        const params = parseHashParams(window.location.hash);
+        if (params.code) {
+          window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
+          const { data } = await authApi.exchange(params.code);
+          const authUser: AuthUser = {
+            employee_id: data.employee_id,
+            employee_code: data.employee_code,
+            role: data.role as AuthUser["role"],
+            full_name: data.full_name,
+          };
+          localStorage.setItem(STORAGE_KEYS.TOKEN, data.access_token);
+          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(authUser));
+          setUser(authUser);
+          return;
         }
 
-        // Restore from localStorage
-        const storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
+        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
         const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
-        if (storedToken && storedUser) {
-          setUser(JSON.parse(storedUser) as AuthUser);
-        }
+        if (token && storedUser) setUser(JSON.parse(storedUser) as AuthUser);
       } catch (error) {
-        console.error("[Auth] Init error:", error);
+        console.error("[Auth] Initialization failed", error);
         localStorage.removeItem(STORAGE_KEYS.TOKEN);
         localStorage.removeItem(STORAGE_KEYS.USER);
       } finally {
         setIsLoading(false);
       }
     };
-    initializeAuth();
+    void initialize();
   }, []);
 
-  // Standard login with TOTP (unchanged workflow)
-  const login = useCallback(async (employee_code: string, password: string, totp_code: string) => {
-    const employeeRes = await authApi.getEmployeeByCode(employee_code);
-    const employee = employeeRes.data;
-    if (!employee.is_active) {
-      throw new Error("Your account is inactive.");
-    }
-    const loginRes = await authApi.login(employee.id, password, totp_code);
-    const data = loginRes.data;
-    localStorage.setItem(STORAGE_KEYS.TOKEN, data.access_token);
+  const login = useCallback(async (employeeCode: string, password: string, totpCode: string) => {
+    const { data } = await authApi.login(employeeCode, password, totpCode);
     const authUser: AuthUser = {
       employee_id: data.employee_id,
       employee_code: data.employee_code,
       role: data.role as AuthUser["role"],
       full_name: data.full_name,
     };
+    localStorage.setItem(STORAGE_KEYS.TOKEN, data.access_token);
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(authUser));
+    clearSetupStorage();
     setUser(authUser);
     setNeedsTotpSetup(false);
     setPendingEmployeeId(null);
+    setPendingSetupToken(null);
   }, []);
 
-  // Pre-login check: validate employee_code + password, detect TOTP requirement
-  const loginWithoutTotp = useCallback(async (employee_code: string, password: string) => {
-    const employeeRes = await authApi.getEmployeeByCode(employee_code);
-    const employee = employeeRes.data;
-    if (!employee.is_active) {
-      throw new Error("Your account is inactive.");
+  const loginWithoutTotp = useCallback(async (employeeCode: string, password: string) => {
+    const { data } = await authApi.preflight(employeeCode, password);
+    if (!data.totp_required) {
+      if (!data.setup_token) throw new Error("TOTP setup could not be started.");
+      sessionStorage.setItem(STORAGE_KEYS.TOTP_SETUP_TOKEN, data.setup_token);
+      sessionStorage.setItem(STORAGE_KEYS.TOTP_EMPLOYEE_ID, String(data.employee_id));
+      setPendingSetupToken(data.setup_token);
+      setPendingEmployeeId(data.employee_id);
+      setNeedsTotpSetup(true);
     }
-    // Try login with empty TOTP to trigger TOTP-not-registered error
-    try {
-      await authApi.login(employee.id, password, "000000");
-      // If it somehow succeeds (shouldn't), proceed
-      return { needsTotp: false, employeeId: employee.id };
-    } catch (err: any) {
-      const detail = err.response?.data?.detail || "";
-      if (typeof detail === "string" && detail.includes("TOTP not registered")) {
-        setNeedsTotpSetup(true);
-        setPendingEmployeeId(employee.id);
-        return { needsTotp: true, employeeId: employee.id };
-      }
-      // Re-throw non-TOTP errors (wrong password, etc.)
-      throw err;
-    }
+    return { needsTotp: !data.totp_required, employeeId: data.employee_id };
   }, []);
 
   const logout = useCallback(() => {
-    const employeeId = user?.employee_id;
-    if (employeeId) {
-      authApi.logout(employeeId).catch(() => null);
-    }
+    if (user) authApi.logout().catch(() => null);
     localStorage.removeItem(STORAGE_KEYS.TOKEN);
     localStorage.removeItem(STORAGE_KEYS.USER);
+    clearSetupStorage();
     setUser(null);
     setNeedsTotpSetup(false);
     setPendingEmployeeId(null);
+    setPendingSetupToken(null);
     window.location.href = `${APP_BASE_PATH}/login`;
   }, [user]);
 
   const clearTotpSetup = useCallback(() => {
+    clearSetupStorage();
     setNeedsTotpSetup(false);
     setPendingEmployeeId(null);
+    setPendingSetupToken(null);
   }, []);
 
   return (
     <AuthContext.Provider value={{
       user,
       isLoading,
-      isAuthenticated: !!user,
+      isAuthenticated: Boolean(user),
       needsTotpSetup,
       pendingEmployeeId,
+      pendingSetupToken,
       login,
       loginWithoutTotp,
       logout,
@@ -179,8 +161,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 }

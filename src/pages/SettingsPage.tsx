@@ -39,7 +39,7 @@ export function SettingsPage() {
 
     setPasswordLoading(true);
     try {
-      await authApi.changePassword(user.employee_id, currentPassword, newPassword);
+      await authApi.changePassword(currentPassword, newPassword);
       setPasswordSuccess("Password changed successfully!");
       setCurrentPassword("");
       setNewPassword("");
@@ -73,10 +73,10 @@ export function SettingsPage() {
       </div>
 
       {/* Password Change */}
-      <div className="glass-panel rounded-xl overflow-hidden">
+      <div className="surface-card overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="material-symbols-outlined text-[20px] text-blue-600">lock</span>
+            <span className="material-symbols-outlined text-[20px] text-primary-600 dark:text-primary-400">lock</span>
             Change Password
           </h3>
         </div>
@@ -102,7 +102,7 @@ export function SettingsPage() {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
-                className="h-10 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                className="input-shell h-10 px-3 text-sm"
               />
             </label>
             <label className="flex flex-col">
@@ -113,7 +113,7 @@ export function SettingsPage() {
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
                 minLength={8}
-                className="h-10 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                className="input-shell h-10 px-3 text-sm"
               />
             </label>
             <label className="flex flex-col">
@@ -124,7 +124,7 @@ export function SettingsPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={8}
-                className="h-10 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                className="input-shell h-10 px-3 text-sm"
               />
             </label>
 
@@ -141,7 +141,7 @@ export function SettingsPage() {
             <button
               type="submit"
               disabled={passwordLoading}
-              className="self-start bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white text-sm font-medium h-10 px-6 rounded-lg transition-colors shadow-sm flex items-center gap-2"
+              className="btn-primary self-start h-10 px-6 disabled:opacity-55 disabled:cursor-not-allowed"
             >
               {passwordLoading ? (
                 <>
@@ -160,10 +160,10 @@ export function SettingsPage() {
       </div>
 
       {/* Theme */}
-      <div className="glass-panel rounded-xl overflow-hidden">
+      <div className="surface-card overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="material-symbols-outlined text-[20px] text-blue-600">palette</span>
+            <span className="material-symbols-outlined text-[20px] text-primary-600 dark:text-primary-400">palette</span>
             Appearance
           </h3>
         </div>

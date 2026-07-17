@@ -1,135 +1,32 @@
 # Login Workflow
 
-## Overview
+The React application authenticates against the FastAPI service. Browser code never contains or sends a shared API key.
 
-The login flow is handled by `LoginPage.tsx` (UI) and `AuthContext.tsx` (state/logic), consuming the remote API at `https://manan.digimeck.in`.
+## Normal login
 
----
+1. `POST /api/v1/auth/preflight` sends `employee_code` and `password`.
+2. Existing TOTP users enter their six-digit code and call `POST /api/v1/auth/login` with `employee_code`, `password`, and `totp_code`.
+3. First-time users receive a ten-minute, purpose-limited setup token. That token is required by `POST /api/v1/auth/register`; an employee ID alone cannot enroll TOTP.
+4. The setup QR is shown once. `POST /api/v1/auth/confirm-totp` verifies the authenticator code.
+5. Successful login returns an access JWT bound to an active `auth_sessions` database record. Logout revokes that one session.
 
-## Normal Login (form-based)
+All protected API requests send `Authorization: Bearer <access_token>`. The backend loads the employee and active session, then enforces self/admin/direct-report access. Client-side route guards are only presentation; they are not the authorization boundary.
 
-### 1. User fills the form (`LoginPage.tsx`)
+## Gateway SSO
 
-Three fields are collected simultaneously:
-- **Employee Code** — e.g. `EMP101` (force-uppercased)
-- **Password**
-- **Authenticator Code** — 6-digit TOTP from Google Authenticator
+The Pi gateway requests a 60-second one-time gateway token. The API validates it and redirects the browser with a separate one-time exchange code in the URL fragment. The frontend removes the fragment immediately and posts the code to `/api/v1/auth/exchange`. A reusable access token is never placed in the redirect URL.
 
-> Submit button is disabled until all three fields are filled and `totpCode.length === 6`.
+## Password reset
 
----
+HR import creates a one-time reset link containing a random token ID and token. `/reset-password` submits both values and the new password. The backend stores only a password hash of the reset token, expires it after seven days, marks it used after success, and revokes existing sessions.
 
-### 2. `login()` is called (`AuthContext.tsx:login`)
+## Storage
 
-Two sequential API calls are made:
+The current frontend stores the access token and display-safe user summary in `localStorage`. This is protected from the previous shared-key vulnerability, but an HttpOnly same-site session cookie would further reduce token exposure if frontend/API hosting is consolidated.
 
-#### API Call 1 — Resolve employee code to ID
-```
-GET /api/v1/employees/by-code/{employeeCode}
-Headers: X-API-Key: <VITE_WEB_API_KEY>
-```
-Returns: `{ id, employee_code, role, is_active, full_name, ... }`
+Key files:
 
-- If `is_active === false` → throws `"Your account is inactive."`
-
-#### API Call 2 — Full authentication
-```
-POST /api/v1/auth/login
-Headers: X-API-Key: <VITE_WEB_API_KEY>
-Body: { employee_id, password, totp_code }
-```
-Returns (success `200`): `{ access_token, employee_id, employee_code, role, full_name }`
-
-Possible error codes:
-| Status | Meaning |
-|--------|---------|
-| `401` | Wrong password or TOTP code |
-| `400` | TOTP not registered / password not set |
-| `404` | Employee not found |
-
----
-
-### 3. Token & user stored in `localStorage`
-
-```js
-localStorage.setItem("access_token", data.access_token);  // JWT
-localStorage.setItem("auth_user", JSON.stringify({
-  employee_id: data.employee_id,
-  employee_code: data.employee_code,
-  role: data.role,          // "admin" | "manager" | "employee"
-  full_name: data.full_name
-}));
-```
-
-> **Important:** The `role` is taken from the login API response, **not** decoded from the JWT client-side.
-
----
-
-### 4. Redirect after login
-
-`LoginPage` reads role from `localStorage` and calls `getDefaultRoute(role)`.  
-Currently all roles redirect to `/dashboard`.
-
----
-
-## Session Restore (page reload)
-
-On every page load, `AuthContext` (in a `useEffect`) reads from `localStorage`:
-
-```js
-const storedToken = localStorage.getItem("access_token");
-const storedUser  = localStorage.getItem("auth_user");
-if (storedToken && storedUser) {
-  setUser(JSON.parse(storedUser));   // no JWT validation — trusts localStorage
-}
-```
-
-No server call is made to validate the token on restore.
-
----
-
-## SSO Login (captive portal redirect)
-
-When a user authenticates via the Pi-Gateway captive portal, they are redirected to:
-```
-/app/#token=<jwt>&employee_id=<id>&role=<role>&employee_code=<code>&full_name=<name>
-```
-
-`AuthContext` detects `#token=` in the URL hash, parses the params, stores them in `localStorage`, and skips the login form entirely.
-
----
-
-## Every Subsequent API Call
-
-Every request through the `api` Axios instance (remote API) automatically attaches:
-
-```
-X-API-Key: <VITE_WEB_API_KEY>        ← always
-Authorization: Bearer <access_token>  ← from localStorage, if present
-```
-
-If the server returns `401` and the request is not an auth call, the interceptor clears `localStorage` and redirects to `/app/login`.
-
----
-
-## Role-Based Access
-
-| Role | Employees list (`/api/v1/employees/`) | Dashboard | Admin Devices |
-|------|---------------------------------------|-----------|---------------|
-| `employee` | ❌ 403 | ✅ | ❌ |
-| `manager`  | ✅ 200 | ✅ | ❌ |
-| `admin`    | ✅ 200 | ✅ | ✅ |
-
-> The backend enforces roles via the **JWT payload**. The `X-API-Key` alone is not sufficient for role-restricted endpoints.
-
----
-
-## Key Files
-
-| File | Purpose |
-|------|---------|
-| `src/pages/LoginPage.tsx` | Login form UI and error handling |
-| `src/contexts/AuthContext.tsx` | Auth state, `login()`, `logout()`, session restore |
-| `src/lib/api.ts` | Axios instances, `X-API-Key` + Bearer token interceptors |
-| `src/lib/routes.ts` | `getDefaultRoute(role)` — post-login redirect logic |
-| `.env` | `VITE_WEB_API_KEY`, `VITE_API_URL` |
+- `src/contexts/AuthContext.tsx`: login, setup state, SSO exchange, logout.
+- `src/lib/api.ts`: bearer-token interceptor and auth contracts.
+- `src/pages/SetupTotpPage.tsx`: one-time TOTP setup.
+- `src/pages/ResetPasswordPage.tsx`: one-time password reset.

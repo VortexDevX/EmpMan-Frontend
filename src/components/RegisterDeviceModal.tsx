@@ -42,7 +42,7 @@ export function RegisterDeviceModal({ onClose, onRegistered }: Props) {
   };
 
   const inputClass =
-    "w-full h-11 px-3.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm";
+    "input-shell w-full h-11 px-3.5 text-sm";
 
   return (
     <div
@@ -50,13 +50,13 @@ export function RegisterDeviceModal({ onClose, onRegistered }: Props) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl shadow-2xl ring-1 ring-slate-900/5 dark:ring-white/10 overflow-hidden"
+        className="w-full max-w-md surface-card overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="material-symbols-outlined text-[20px] text-blue-500">add_circle</span>
+            <span className="material-symbols-outlined text-[20px] text-primary-600 dark:text-primary-400">add_circle</span>
             Register Device
           </h2>
           <button
@@ -136,7 +136,7 @@ export function RegisterDeviceModal({ onClose, onRegistered }: Props) {
           <div className="flex gap-3 mt-6">
             <button
               type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium h-11 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
+              className="btn-primary flex-1 disabled:opacity-55 disabled:cursor-not-allowed"
               disabled={loading}
             >
               {loading ? (

@@ -7,6 +7,7 @@ import { devicesApi } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import type { Device } from "../lib/types";
 import { RegisterDeviceModal } from "../components/RegisterDeviceModal";
+import { StatusBadge } from "../components/ui/StatusBadge";
 
 export function DevicesPage() {
   const { user } = useAuth();
@@ -111,16 +112,9 @@ export function DevicesPage() {
                       {device.ip_address || "—"}
                     </td>
                     <td className="px-5 py-3.5">
-                      <span
-                        className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
-                          device.is_blocked
-                            ? "bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400"
-                            : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
-                        }`}
-                      >
-                        <span className={`h-1.5 w-1.5 rounded-full ${device.is_blocked ? "bg-rose-500" : "bg-emerald-500"}`} />
+                      <StatusBadge tone={device.is_blocked ? "danger" : "success"}>
                         {device.is_blocked ? "Blocked" : "Active"}
-                      </span>
+                      </StatusBadge>
                     </td>
                     <td className="px-5 py-3.5">
                       {device.is_blocked ? (

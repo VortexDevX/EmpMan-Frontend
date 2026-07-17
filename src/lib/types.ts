@@ -276,5 +276,6 @@ export interface TotpSetupResponse {
   employee_code: string;
   totp_secret: string;
   qr_code_url: string;
+  confirmation_token: string;
   message: string;
 }

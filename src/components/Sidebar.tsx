@@ -26,13 +26,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       />
 
       <aside
-        className={`w-72 lg:w-80 h-screen glass-panel border-r border-white/30 dark:border-slate-700/40 flex flex-col fixed left-0 top-0 z-40 md:z-30 transform transition-transform duration-200 ${
+        className={`w-64 lg:w-72 h-screen bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col fixed left-0 top-0 z-40 md:z-30 transform transition-transform duration-200 ${
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
         {/* Logo / Brand */}
-        <div className="h-[74px] px-5 flex items-center gap-3 border-b border-white/30 dark:border-slate-700/40 shrink-0">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-600 flex items-center justify-center shadow-md shadow-cyan-500/25">
+        <div className="h-[72px] px-4 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
+          <div className="h-10 w-10 rounded-lg bg-primary-700 flex items-center justify-center shadow-sm">
             <span className="material-symbols-outlined text-white text-[22px]">monitoring</span>
           </div>
           <div className="min-w-0">
@@ -42,7 +42,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <button
             type="button"
             onClick={onClose}
-            className="ml-auto md:hidden h-8 w-8 rounded-xl text-slate-500 hover:bg-white/40 dark:hover:bg-slate-700/35"
+            className="ml-auto md:hidden h-8 w-8 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
             aria-label="Close menu"
           >
             <span className="material-symbols-outlined text-[20px]">close</span>
@@ -50,14 +50,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
           {groupOrder.map((groupKey) => {
             const group = groups[groupKey];
             if (!group) return null;
 
             return (
               <div key={groupKey}>
-                <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-3 mb-2">
+                <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase px-3 mb-2">
                   {group.label}
                 </p>
                 <ul className="space-y-1">
@@ -68,10 +68,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         end={route.path === "/admin"}
                         onClick={onClose}
                         className={({ isActive }) =>
-                          `flex items-center gap-3 px-3 py-3 rounded-xl text-[15px] font-medium transition-all duration-150 ${
+                          `relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
                             isActive
-                              ? "bg-gradient-to-r from-sky-50 to-blue-50 dark:from-blue-900/25 dark:to-cyan-900/20 text-blue-700 dark:text-blue-200 ring-1 ring-sky-200/70 dark:ring-blue-700/35 shadow-sm"
-                              : "text-slate-600 dark:text-slate-300 hover:bg-white/45 dark:hover:bg-slate-700/35 hover:text-slate-900 dark:hover:text-white"
+                              ? "bg-primary-50 dark:bg-primary-900/35 text-primary-800 dark:text-primary-200 shadow-[inset_3px_0_0_#0f766e]"
+                              : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-slate-950 dark:hover:text-white"
                           }`
                         }
                       >
@@ -87,8 +87,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </nav>
 
         {/* User Footer */}
-        <div className="shrink-0 border-t border-white/30 dark:border-slate-700/40 p-3">
-          <div className="flex items-center gap-3 px-2 py-2 rounded-xl bg-white/40 dark:bg-slate-800/35 ring-1 ring-white/35 dark:ring-slate-700/50">
+        <div className="shrink-0 border-t border-slate-200 dark:border-slate-800 p-3">
+          <div className="flex items-center gap-3 px-2 py-2 rounded-lg bg-slate-50 dark:bg-slate-900">
             <div className="h-9 w-9 rounded-full bg-white/75 dark:bg-slate-700/75 flex items-center justify-center shrink-0 ring-1 ring-white/30 dark:ring-slate-600/50">
               <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">
                 {user.full_name?.charAt(0)?.toUpperCase() || "U"}
@@ -104,7 +104,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
             <button
               onClick={logout}
-              className="shrink-0 p-1.5 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               title="Sign out"
             >
               <span className="material-symbols-outlined text-[20px]">logout</span>

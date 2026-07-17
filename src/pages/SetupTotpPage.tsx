@@ -4,10 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { authApi } from "../lib/api";
 import type { TotpSetupResponse } from "../lib/types";
+import { AuthCard, AuthPage } from "../components/ui/AuthLayout";
+import { FormAlert } from "../components/ui/FormLayout";
 
 export function SetupTotpPage() {
   const navigate = useNavigate();
-  const { pendingEmployeeId, clearTotpSetup } = useAuth();
+  const { pendingEmployeeId, pendingSetupToken, clearTotpSetup } = useAuth();
 
   const [step, setStep] = useState<"generate" | "verify">("generate");
   const [totpData, setTotpData] = useState<TotpSetupResponse | null>(null);
@@ -17,8 +19,8 @@ export function SetupTotpPage() {
   const [success, setSuccess] = useState(false);
 
   const handleGenerateQR = async () => {
-    if (!pendingEmployeeId) {
-      setError("No employee ID found. Please log in again.");
+    if (!pendingEmployeeId || !pendingSetupToken) {
+      setError("Your setup session expired. Please sign in again.");
       return;
     }
 
@@ -26,7 +28,7 @@ export function SetupTotpPage() {
     setError("");
 
     try {
-      const res = await authApi.register(pendingEmployeeId);
+      const res = await authApi.register(pendingSetupToken);
       setTotpData(res.data);
       setStep("verify");
     } catch (err: any) {
@@ -43,19 +45,19 @@ export function SetupTotpPage() {
 
   const handleVerify = async (e: FormEvent) => {
     e.preventDefault();
-    if (!pendingEmployeeId) return;
+    if (!totpData?.confirmation_token) return;
 
     setLoading(true);
     setError("");
 
     try {
-      await authApi.verify(pendingEmployeeId, verifyCode);
+      await authApi.confirmTotp(totpData.confirmation_token, verifyCode);
       setSuccess(true);
       setTimeout(() => {
         clearTotpSetup();
         navigate("/login");
       }, 2000);
-    } catch (err: any) {
+    } catch {
       setError("Invalid code. Please check your authenticator app and try again.");
     } finally {
       setLoading(false);
@@ -67,18 +69,18 @@ export function SetupTotpPage() {
     navigate("/login");
   };
 
-  if (!pendingEmployeeId) {
+  if (!pendingEmployeeId || !pendingSetupToken) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md glass-panel rounded-2xl p-8 text-center">
-          <div className="mb-6 mx-auto h-16 w-16 rounded-xl bg-amber-500/10 flex items-center justify-center">
+        <div className="w-full max-w-md surface-card p-8 text-center">
+          <div className="mb-6 mx-auto h-16 w-16 rounded-lg bg-amber-500/10 flex items-center justify-center">
             <span className="material-symbols-outlined text-[32px] text-amber-600">warning</span>
           </div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Session Expired</h2>
           <p className="text-slate-500 dark:text-slate-400 mb-6">
             Please log in again to set up two-factor authentication.
           </p>
-          <button onClick={handleBackToLogin} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium h-12 rounded-lg transition-colors">
+          <button onClick={handleBackToLogin} className="btn-primary w-full h-12">
             Back to Login
           </button>
         </div>
@@ -87,51 +89,39 @@ export function SetupTotpPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Background Decoration */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-emerald-500/5 blur-[120px]"></div>
-        <div className="absolute top-[40%] -right-[10%] w-[40%] h-[40%] rounded-full bg-blue-400/5 blur-[100px]"></div>
-      </div>
-
+    <AuthPage firstGlowClassName="bg-emerald-500/5">
       <main className="flex-1 flex items-center justify-center p-4 z-10">
-        <div className="w-full max-w-[480px] glass-panel rounded-2xl overflow-hidden">
-          {/* Header */}
-          <div className="px-6 sm:px-8 pt-10 pb-2 flex flex-col items-center">
-            <div className="mb-6 h-16 w-16 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-              <span className="material-symbols-outlined text-[32px]">security</span>
-            </div>
-            <h2 className="text-slate-900 dark:text-white tracking-tight text-[28px] font-bold leading-tight text-center section-title">
-              Set Up Two-Factor Auth
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal text-center mt-2">
-              {step === "generate"
-                ? "Secure your account with an authenticator app"
-                : "Scan the QR code and verify your setup"}
-            </p>
-          </div>
-
-          {/* Content */}
-          <div className="px-6 sm:px-8 py-6 w-full">
+        <AuthCard
+          icon="security"
+          iconClassName="bg-emerald-500/10 text-emerald-600"
+          title="Set Up Two-Factor Auth"
+          subtitle={step === "generate"
+            ? "Secure your account with an authenticator app"
+            : "Scan the QR code and verify your setup"}
+          maxWidthClassName="max-w-[480px]"
+          footer={
+            <button
+              onClick={handleBackToLogin}
+              className="w-full text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors flex items-center justify-center gap-1"
+            >
+              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+              Back to Login
+            </button>
+          }
+        >
             {error && (
-              <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm flex items-start gap-2">
-                <span className="material-symbols-outlined text-[18px] mt-0.5 shrink-0">error</span>
-                <span>{error}</span>
-              </div>
+              <FormAlert tone="error">{error}</FormAlert>
             )}
 
             {success && (
-              <div className="mb-4 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 text-sm flex items-start gap-2">
-                <span className="material-symbols-outlined text-[18px] mt-0.5 shrink-0">check_circle</span>
-                <span>TOTP set up successfully! Redirecting to login...</span>
-              </div>
+              <FormAlert tone="success">TOTP set up successfully! Redirecting to login...</FormAlert>
             )}
 
             {step === "generate" && (
               <div className="flex flex-col gap-5">
-                <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                <div className="p-4 rounded-lg bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800">
                   <h3 className="font-semibold text-slate-900 dark:text-white text-sm mb-2 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[18px] text-blue-600">info</span>
+                    <span className="material-symbols-outlined text-[18px] text-primary-700 dark:text-primary-300">info</span>
                     Before you begin
                   </h3>
                   <ol className="text-sm text-slate-600 dark:text-slate-300 space-y-1.5 list-decimal list-inside">
@@ -145,7 +135,7 @@ export function SetupTotpPage() {
                 <button
                   onClick={handleGenerateQR}
                   disabled={loading}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white font-medium h-12 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
+                  className="btn-primary w-full h-12 disabled:opacity-55 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>
@@ -169,7 +159,7 @@ export function SetupTotpPage() {
               <div className="flex flex-col gap-5">
                 {/* QR Code */}
                 <div className="flex flex-col items-center gap-4">
-                  <div className="bg-white p-4 rounded-xl shadow-inner">
+                  <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-inner">
                     <img
                       src={totpData.qr_code_url}
                       alt="TOTP QR Code"
@@ -202,14 +192,14 @@ export function SetupTotpPage() {
                       autoComplete="one-time-code"
                       required
                       autoFocus
-                      className="w-full h-12 px-4 rounded-lg border border-slate-300/80 dark:border-slate-600 bg-white/80 dark:bg-slate-800/70 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all duration-200 text-center text-xl tracking-[0.3em] font-mono"
+                      className="input-shell w-full h-12 px-4 text-center text-xl font-mono"
                     />
                   </label>
 
                   <button
                     type="submit"
                     disabled={loading || verifyCode.length !== 6 || success}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white font-medium h-12 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
+                    className="btn-primary w-full h-12 disabled:opacity-55 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <>
@@ -229,20 +219,8 @@ export function SetupTotpPage() {
                 </form>
               </div>
             )}
-          </div>
-
-          {/* Footer */}
-          <div className="glass-soft px-6 sm:px-8 py-5 border-t border-white/30 dark:border-slate-700/50">
-            <button
-              onClick={handleBackToLogin}
-              className="w-full text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors flex items-center justify-center gap-1"
-            >
-              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-              Back to Login
-            </button>
-          </div>
-        </div>
+        </AuthCard>
       </main>
-    </div>
+    </AuthPage>
   );
 }
