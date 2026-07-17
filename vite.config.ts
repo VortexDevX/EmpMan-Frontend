@@ -4,7 +4,8 @@ import react from "@vitejs/plugin-react";
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const remoteApiTarget = env.VITE_API_URL || "https://manan.digimeck.in";
+  const remoteApiTarget =
+    env.VITE_API_URL || "https://emp-manan.mvlab.cloud";
   const basePath = env.VITE_BASE_PATH || (command === "build" ? "/app/" : "/");
   const localApiTarget =
     env.VITE_LOCAL_API_TARGET ||

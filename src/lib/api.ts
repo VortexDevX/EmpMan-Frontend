@@ -15,7 +15,8 @@ import type {
   PendingApproval,
 } from "./types";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://manan.digimeck.in";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://emp-manan.mvlab.cloud";
 const GATEWAY_API_URL = import.meta.env.VITE_GATEWAY_API_URL || "";
 const GATEWAY_WITH_CREDENTIALS = import.meta.env.VITE_GATEWAY_WITH_CREDENTIALS !== "false";
 const APP_BASE_PATH = import.meta.env.BASE_URL.endsWith("/")
