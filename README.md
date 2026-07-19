@@ -41,4 +41,6 @@ npm run test:a11y
 npm audit --omit=dev
 ```
 
-`npm run test:a11y` uses Microsoft Edge through Playwright. It checks desktop/mobile login accessibility and authenticated mobile navigation with mocked API responses. The broader repository test and release procedure is in `../TESTING_GUIDE.md`.
+`npm run test:a11y` uses Microsoft Edge through Playwright. It checks desktop/mobile login accessibility and authenticated mobile navigation with mocked API responses. The broader repository test and release procedure is in [`../docs/TESTING.md`](../docs/TESTING.md).
+
+Read [Frontend guide](../docs/FRONTEND.md) for roles, route policy, browser auth, API clients, configuration, and deployment rules.
