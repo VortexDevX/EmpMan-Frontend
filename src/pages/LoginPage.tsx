@@ -2,10 +2,11 @@
 
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 import { getDefaultRoute, type UserRole } from "../lib/routes";
 import { AuthCard, AuthPage } from "../components/ui/AuthLayout";
 import { FormAlert } from "../components/ui/FormLayout";
+import { getApiErrorMessage, getApiStatus } from "../lib/errors";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -40,20 +41,13 @@ export function LoginPage() {
       const role = storedUser ? JSON.parse(storedUser).role : "employee";
       
       navigate(getDefaultRoute(role as UserRole));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[Login] Error:", err);
       
-      if (err.response?.status === 401) {
+      if (getApiStatus(err) === 401) {
         setError("Invalid password or authenticator code.");
       } else {
-        const detail = err.response?.data?.detail;
-        if (Array.isArray(detail)) {
-          setError(detail.map((d: any) => d.msg).join(", "));
-        } else if (typeof detail === "string") {
-          setError(detail);
-        } else {
-          setError(err.message || "Login failed. Please try again.");
-        }
+        setError(getApiErrorMessage(err, "Login failed. Please try again."));
       }
     } finally {
       setLoading(false);

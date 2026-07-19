@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { dashboardApi, gatewayApi, predictionsApi, tasksApi } from "../../lib/api";
 import { gatewayAdminEnabled } from "../../lib/deployment";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 
 export function useDashboardData() {
   const { user } = useAuth();
@@ -59,19 +59,19 @@ export function useDashboardData() {
   });
 
   const tasks = Array.isArray(myTasks) ? myTasks : [];
-  const pendingTasks = tasks.filter((t: any) => t.status === "pending" || t.status === "in_progress");
-  const completedTasks = tasks.filter((t: any) => t.status === "completed" || t.status === "done");
+  const pendingTasks = tasks.filter((task) => task.status === "pending" || task.status === "in_progress");
+  const completedTasks = tasks.filter((task) => task.status === "completed");
 
   const teamRows = Array.isArray(productivity) ? productivity : [];
-  const chartData = teamRows.map((row: any) => ({
+  const chartData = teamRows.map((row) => ({
     employee_id: row.employee_id,
     employee: `#${row.employee_id}`,
     avg_productivity: Number(Number(row.avg_productivity ?? 0).toFixed(1)),
   }));
 
   const alerts = Array.isArray(burnoutAlerts) ? burnoutAlerts : [];
-  const connectedDevices = connectedData?.devices || [];
-  const blockedMacs = connectedData?.blocked_macs || [];
+  const connectedDevices = connectedData?.devices ?? [];
+  const blockedMacs = connectedData?.blocked_macs ?? [];
 
   const burnoutRisk = latestPredictions?.burnout?.risk_level || mySummary?.burnout_risk || "unknown";
   const workloadStatus = latestPredictions?.workload?.future_workload_status || "unknown";

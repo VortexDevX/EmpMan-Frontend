@@ -28,6 +28,7 @@ export interface Employee {
   profile_complete: boolean;
   is_active: boolean;
   created_at: string;
+  last_login?: string | null;
 }
 
 export interface EmployeeProfile {
@@ -138,6 +139,7 @@ export interface Device {
   device_name: string;
   device_type: string;
   is_blocked: boolean;
+  registered_at?: string;
 }
 
 export interface RegisterDeviceRequest {
@@ -151,25 +153,34 @@ export interface RegisterDeviceRequest {
 // ─── Dashboard ───────────────────────────────────────────────
 export interface DashboardOverview {
   total_employees: number;
-  active_employees: number;
-  departments: number;
-  [key: string]: unknown;
+  active_today: number;
+  pending_tasks: number;
+  tasks_completed_today: number;
+  date: string;
 }
 
 export interface TeamProductivity {
-  [key: string]: unknown;
+  employee_id: number;
+  avg_productivity: number;
+  avg_hours: number;
+  total_tasks: number;
 }
 
 export interface BurnoutAlert {
   employee_id: number;
-  employee_name: string;
+  employee_name?: string;
   risk_level: string;
   score: number;
-  [key: string]: unknown;
+  date: string;
 }
 
 export interface EmployeeSummary {
-  [key: string]: unknown;
+  employee_id: number;
+  today_hours: number;
+  today_productivity: number;
+  tasks_pending: number;
+  burnout_risk: string;
+  date: string;
 }
 
 // ─── ML Predictions ──────────────────────────────────────────
@@ -186,6 +197,63 @@ export interface Prediction {
   future_productivity_trend?: string | null;
   future_workload_status?: string | null;
   created_at: string;
+}
+
+export interface LatestPrediction {
+  score: number | null;
+  risk_level: string | null;
+  prediction_date: string;
+  predicted_workload_hours: number | null;
+  future_productivity_trend: string | null;
+  future_workload_status: string | null;
+}
+
+export interface LatestPredictions {
+  productivity: LatestPrediction | null;
+  workload: LatestPrediction | null;
+  burnout: LatestPrediction | null;
+}
+
+export interface ProductivityChartRow {
+  employee_id: number;
+  employee: string;
+  avg_productivity: number;
+}
+
+export interface GatewayConnectedDevice {
+  mac: string;
+  ip: string;
+  hostname: string;
+  authenticated: boolean;
+  blocked: boolean;
+  employee_id?: number;
+  employee_code?: string;
+  full_name?: string;
+  device_id?: number;
+}
+
+export interface GatewayConnectedData {
+  devices: GatewayConnectedDevice[];
+  stats: Record<string, number>;
+  authed_macs: string[];
+  blocked_macs: string[];
+}
+
+export interface GatewayConnectedResponse {
+  ok: boolean;
+  data: GatewayConnectedData;
+}
+
+export interface NetworkSession {
+  id: number;
+  session_start: string | null;
+  session_end: string | null;
+  active_duration_sec: number;
+  idle_duration_sec: number;
+  bytes_uploaded: number;
+  bytes_downloaded: number;
+  avg_bandwidth_kbps: number | string;
+  source: string;
 }
 
 // ─── Create Employee ─────────────────────────────────────────

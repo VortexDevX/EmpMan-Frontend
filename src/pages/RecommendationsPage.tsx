@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi, predictionsApi } from "../lib/api";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 import { EmployeeLink } from "../components/EmployeeLink";
 
 function toScore(value: unknown, decimals = 1): string {
@@ -87,7 +87,7 @@ export function RecommendationsPage() {
             </div>
           ) : alerts.length > 0 ? (
             <div className="mt-4 space-y-3">
-              {alerts.slice(0, 8).map((alert: any, idx: number) => {
+              {alerts.slice(0, 8).map((alert, idx) => {
                 const risk = String(alert.risk_level || "unknown").toLowerCase();
                 const tone = risk === "high" || risk === "critical" ? "rose" : risk === "medium" ? "amber" : "teal";
                 const meaning =
@@ -168,7 +168,7 @@ export function RecommendationsPage() {
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Recent Prediction History</h2>
         {predictionList.length > 0 ? (
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-            {predictionList.slice(0, 9).map((pred: any) => (
+            {predictionList.slice(0, 9).map((pred) => (
               <div key={pred.id} className="rounded-xl border border-slate-200/70 dark:border-slate-700/60 p-3">
                 <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{pred.prediction_type}</p>
                 <p className="text-lg font-semibold text-slate-900 dark:text-white mt-1">{toScore(pred.score, 1)}</p>

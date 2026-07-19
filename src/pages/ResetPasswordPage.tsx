@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { AuthCard, AuthPage } from "../components/ui/AuthLayout";
 import { FormAlert } from "../components/ui/FormLayout";
 import { authApi } from "../lib/api";
+import { getApiErrorMessage } from "../lib/errors";
 
 export function ResetPasswordPage() {
   const [params] = useSearchParams();
@@ -23,8 +24,8 @@ export function ResetPasswordPage() {
     try {
       await authApi.resetPassword(tokenId, token, password);
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || "This reset link is invalid or expired.");
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "This reset link is invalid or expired."));
     } finally {
       setLoading(false);
     }

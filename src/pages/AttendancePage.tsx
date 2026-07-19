@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { attendanceApi } from "../lib/api";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 
 export function AttendancePage() {
   const { user } = useAuth();
@@ -22,7 +22,7 @@ export function AttendancePage() {
   });
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
-  const todayRecord = myAttendance.find((r: any) => String(r.work_date).slice(0, 10) === today);
+  const todayRecord = myAttendance.find((record) => String(record.work_date).slice(0, 10) === today);
 
   const checkIn = useMutation({
     mutationFn: () => attendanceApi.checkIn(user!.employee_id, note),
@@ -82,7 +82,7 @@ export function AttendancePage() {
       <div className="surface-card p-5">
         <h2 className="text-base font-semibold text-slate-900 dark:text-white">Recent Attendance</h2>
         <div className="mt-3 divide-y divide-slate-200/70 dark:divide-slate-700/60">
-          {myAttendance.slice(0, 10).map((row: any) => (
+          {myAttendance.slice(0, 10).map((row) => (
             <div key={row.id} className="py-2.5 text-sm flex justify-between gap-3">
               <span className="text-slate-700 dark:text-slate-300">{String(row.work_date).slice(0, 10)}</span>
               <span className="text-slate-500 dark:text-slate-400">{row.status}</span>
@@ -98,7 +98,7 @@ export function AttendancePage() {
         <div className="surface-card p-5">
           <h2 className="text-base font-semibold text-slate-900 dark:text-white">Team Snapshot (Today)</h2>
           <div className="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {(teamAttendance as any[]).map((row: any) => (
+            {teamAttendance.map((row) => (
               <div key={row.id} className="glass-soft p-3">
                 <p className="text-sm font-medium text-slate-900 dark:text-white">Employee #{row.employee_id}</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -115,4 +115,3 @@ export function AttendancePage() {
     </div>
   );
 }
-

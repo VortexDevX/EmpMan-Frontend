@@ -1,7 +1,7 @@
 // frontend/src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useAuth } from "./contexts/AuthContext";
+import { useAuth } from "./contexts/useAuth";
 import { Suspense, lazy, type ReactElement } from "react";
 import { getDefaultRoute, type UserRole } from "./lib/routes";
 

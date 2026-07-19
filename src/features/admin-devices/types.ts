@@ -1,4 +1,5 @@
 import type { UseMutationResult } from "@tanstack/react-query";
+import type { NetworkSession } from "../../lib/types";
 
 export interface GatewayDevice {
   mac: string;
@@ -33,7 +34,7 @@ export interface AdminDevicesState {
   showLogs: boolean;
   toast: { type: "success" | "error"; text: string } | null;
   logs: string[] | undefined;
-  sessions: any;
+  sessions: NetworkSession[] | undefined;
   filteredDevices: GatewayDevice[];
   stats: DeviceStats;
   tabs: DeviceTab[];

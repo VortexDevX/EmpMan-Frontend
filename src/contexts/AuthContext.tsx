@@ -1,21 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { authApi } from "../lib/api";
 import type { AuthUser } from "../lib/types";
-
-interface AuthContextType {
-  user: AuthUser | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  needsTotpSetup: boolean;
-  pendingEmployeeId: number | null;
-  pendingSetupToken: string | null;
-  login: (employeeCode: string, password: string, totpCode: string) => Promise<void>;
-  loginWithoutTotp: (employeeCode: string, password: string) => Promise<{ needsTotp: boolean; employeeId: number }>;
-  logout: () => void;
-  clearTotpSetup: () => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext } from "./authContextCore";
 
 const STORAGE_KEYS = {
   TOKEN: "access_token",
@@ -157,10 +143,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
-  return context;
 }

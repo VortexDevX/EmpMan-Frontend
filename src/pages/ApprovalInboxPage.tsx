@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { approvalsApi, leaveApi, tasksApi } from "../lib/api";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 
 export function ApprovalInboxPage() {
   const { user } = useAuth();
@@ -49,7 +49,7 @@ export function ApprovalInboxPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {(approvals as any[]).map((a: any) => (
+            {approvals.map((a) => (
               <div key={`${a.approval_type}-${a.reference_id}`} className="glass-soft p-4">
                 <div className="flex flex-wrap justify-between gap-3">
                   <div>
@@ -79,7 +79,7 @@ export function ApprovalInboxPage() {
                 </div>
               </div>
             ))}
-            {(approvals as any[]).length === 0 && (
+            {approvals.length === 0 && (
               <p className="text-sm text-slate-500 dark:text-slate-400">No pending approvals.</p>
             )}
           </div>
@@ -88,4 +88,3 @@ export function ApprovalInboxPage() {
     </div>
   );
 }
-

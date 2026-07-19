@@ -2,9 +2,10 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 import { tasksApi, employeesApi } from "../lib/api";
 import { EmployeeLink } from "../components/EmployeeLink";
+import { getApiErrorMessage } from "../lib/errors";
 import {
   fieldInputClass,
   fieldLabelClass,
@@ -55,15 +56,8 @@ export function TaskAssignmentPage() {
       setTimeout(() => {
         navigate("/tasks");
       }, 1500);
-    } catch (err: any) {
-      const detail = err.response?.data?.detail;
-      if (typeof detail === "string") {
-        setError(detail);
-      } else if (Array.isArray(detail)) {
-        setError(detail.map((d: any) => d.msg).join(", "));
-      } else {
-        setError("Failed to create task. Please try again.");
-      }
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to create task. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -74,7 +68,7 @@ export function TaskAssignmentPage() {
   minDate.setDate(minDate.getDate() + 1);
   const minDateStr = minDate.toISOString().split("T")[0];
   const selectedEmployee = Array.isArray(employees)
-    ? employees.find((emp: any) => emp.id === Number(assignedTo))
+    ? employees.find((employee) => employee.id === Number(assignedTo))
     : null;
 
   return (
@@ -135,10 +129,10 @@ export function TaskAssignmentPage() {
                   <option value="">Select employee...</option>
                   {Array.isArray(employees) &&
                     employees
-                      .filter((emp: any) => emp.is_active)
-                      .map((emp: any) => (
-                        <option key={emp.id} value={emp.id}>
-                          {emp.full_name} ({emp.employee_code})
+                      .filter((employee) => employee.is_active)
+                      .map((employee) => (
+                        <option key={employee.id} value={employee.id}>
+                          {employee.full_name} ({employee.employee_code})
                         </option>
                       ))}
                 </select>

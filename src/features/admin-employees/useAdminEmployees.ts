@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { adminApi } from "../../lib/api";
 import type { AdminEmployee } from "./types";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 
 function unwrapEmployees(payload: unknown): AdminEmployee[] {
   if (Array.isArray(payload)) return payload as AdminEmployee[];

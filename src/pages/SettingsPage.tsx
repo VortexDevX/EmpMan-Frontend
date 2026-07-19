@@ -1,7 +1,8 @@
 // src/pages/SettingsPage.tsx
 import { useState, type FormEvent } from "react";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 import { authApi } from "../lib/api";
+import { getApiErrorMessage } from "../lib/errors";
 
 export function SettingsPage() {
   const { user } = useAuth();
@@ -44,13 +45,8 @@ export function SettingsPage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (err: any) {
-      const detail = err.response?.data?.detail;
-      if (typeof detail === "string") {
-        setPasswordError(detail);
-      } else {
-        setPasswordError("Failed to change password. Check your current password.");
-      }
+    } catch (err: unknown) {
+      setPasswordError(getApiErrorMessage(err, "Failed to change password. Check your current password."));
     } finally {
       setPasswordLoading(false);
     }

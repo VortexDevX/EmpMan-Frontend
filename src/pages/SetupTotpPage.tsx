@@ -1,11 +1,12 @@
 // src/pages/SetupTotpPage.tsx
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 import { authApi } from "../lib/api";
 import type { TotpSetupResponse } from "../lib/types";
 import { AuthCard, AuthPage } from "../components/ui/AuthLayout";
 import { FormAlert } from "../components/ui/FormLayout";
+import { getApiErrorMessage } from "../lib/errors";
 
 export function SetupTotpPage() {
   const navigate = useNavigate();
@@ -31,13 +32,8 @@ export function SetupTotpPage() {
       const res = await authApi.register(pendingSetupToken);
       setTotpData(res.data);
       setStep("verify");
-    } catch (err: any) {
-      const detail = err.response?.data?.detail;
-      if (typeof detail === "string") {
-        setError(detail);
-      } else {
-        setError("Failed to generate TOTP setup. Please try again.");
-      }
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to generate TOTP setup. Please try again."));
     } finally {
       setLoading(false);
     }

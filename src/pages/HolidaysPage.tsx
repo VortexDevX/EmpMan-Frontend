@@ -15,11 +15,11 @@ export function HolidaysPage() {
   if (isLoading) return <PageLoader />;
 
   const upcomingHolidays = holidays?.filter(
-    (h: any) => new Date(h.date) >= new Date()
+    (holiday) => new Date(holiday.date) >= new Date()
   ) || [];
 
   const pastHolidays = holidays?.filter(
-    (h: any) => new Date(h.date) < new Date()
+    (holiday) => new Date(holiday.date) < new Date()
   ) || [];
 
   return (
@@ -46,7 +46,7 @@ export function HolidaysPage() {
           />
         ) : (
           <div className="divide-y divide-slate-200 dark:divide-slate-700">
-            {upcomingHolidays.map((holiday: any) => (
+            {upcomingHolidays.map((holiday) => (
               <div key={holiday.id} className="p-4 flex items-center gap-4">
                 <div className="w-14 h-14 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex flex-col items-center justify-center">
                   <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
@@ -81,7 +81,7 @@ export function HolidaysPage() {
             <CardTitle>Past Holidays</CardTitle>
           </CardHeader>
           <div className="divide-y divide-slate-200 dark:divide-slate-700 opacity-60">
-            {pastHolidays.slice(0, 5).map((holiday: any) => (
+            {pastHolidays.slice(0, 5).map((holiday) => (
               <div key={holiday.id} className="p-4 flex items-center gap-4">
                 <div className="w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-700 flex flex-col items-center justify-center">
                   <span className="text-xs font-medium text-slate-500">

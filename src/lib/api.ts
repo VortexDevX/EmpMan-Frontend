@@ -13,6 +13,22 @@ import type {
   LeaveBalance,
   LeaveRequest,
   PendingApproval,
+  BurnoutAlert,
+  DashboardOverview,
+  Department,
+  Device,
+  Employee,
+  EmployeeProfile,
+  EmployeeSummary,
+  GatewayConnectedResponse,
+  Holiday,
+  LatestPredictions,
+  NetworkSession,
+  Prediction,
+  Survey,
+  Task,
+  TaskComment,
+  TeamProductivity,
 } from "./types";
 
 const API_BASE_URL =
@@ -216,7 +232,7 @@ export const authApi = {
 };
 
 const gatewayRuntimeApi = {
-  getConnected: () => localApi.get("/admin/api/connected"),
+  getConnected: () => localApi.get<GatewayConnectedResponse>("/admin/api/connected"),
   getStats: () => localApi.get("/admin/api/stats"),
   disconnect: (mac: string, employeeId?: number) =>
     localApi.post("/admin/api/disconnect", { mac, employee_id: employeeId }),
@@ -235,9 +251,9 @@ export const gatewayApi = {
     localApi.delete(`/admin/api/devices/${deviceId}/delete`),
   // Employee-specific detail views can come from the remote Employee API.
   getEmployeeSessions: (employeeId: number) =>
-    api.get(`/api/v1/telemetry/sessions/employee/${employeeId}`),
+    api.get<NetworkSession[]>(`/api/v1/telemetry/sessions/employee/${employeeId}`),
   getEmployeeDevices: (employeeId: number) =>
-    api.get(`/api/v1/devices/employee/${employeeId}`),
+    api.get<Device[]>(`/api/v1/devices/employee/${employeeId}`),
 };
 
 // ─── Status (local Flask) ────────────────────────────────────
@@ -247,29 +263,29 @@ export const statusApi = {
 
 // ─── Employees (remote API) ──────────────────────────────────
 export const employeesApi = {
-  list: () => api.get("/api/v1/employees/"),
-  get: (id: number) => api.get(`/api/v1/employees/${id}`),
-  getByCode: (code: string) => api.get(`/api/v1/employees/by-code/${code}`),
-  create: (data: CreateEmployeeRequest) => api.post("/api/v1/employees/", data),
-  getProfile: (id: number) => api.get(`/api/v1/employees/${id}/profile`),
+  list: () => api.get<Employee[]>("/api/v1/employees/"),
+  get: (id: number) => api.get<Employee>(`/api/v1/employees/${id}`),
+  getByCode: (code: string) => api.get<Employee>(`/api/v1/employees/by-code/${code}`),
+  create: (data: CreateEmployeeRequest) => api.post<Employee>("/api/v1/employees/", data),
+  getProfile: (id: number) => api.get<EmployeeProfile>(`/api/v1/employees/${id}/profile`),
   createProfile: (id: number, data: CreateProfileRequest) =>
-    api.post(`/api/v1/employees/${id}/profile`, data),
+    api.post<EmployeeProfile>(`/api/v1/employees/${id}/profile`, data),
   updateProfile: (id: number, data: UpdateProfileRequest) =>
-    api.put(`/api/v1/employees/${id}/profile`, data),
+    api.put<EmployeeProfile>(`/api/v1/employees/${id}/profile`, data),
 };
 
 // ─── Departments (remote API) ────────────────────────────────
 export const departmentsApi = {
-  list: () => api.get("/api/v1/departments/"),
+  list: () => api.get<Department[]>("/api/v1/departments/"),
 };
 
 // ─── Tasks (remote API) ──────────────────────────────────────
 export const tasksApi = {
   getForEmployee: (employeeId: number) =>
-    api.get(`/api/v1/tasks/employee/${employeeId}`),
-  getAll: () => api.get("/api/v1/tasks/"),
-  get: (taskId: number) => api.get(`/api/v1/tasks/${taskId}`),
-  create: (data: CreateTaskRequest) => api.post("/api/v1/tasks/", data),
+    api.get<Task[]>(`/api/v1/tasks/employee/${employeeId}`),
+  getAll: () => api.get<Task[]>("/api/v1/tasks/"),
+  get: (taskId: number) => api.get<Task>(`/api/v1/tasks/${taskId}`),
+  create: (data: CreateTaskRequest) => api.post<Task>("/api/v1/tasks/", data),
   updateStatus: (taskId: number, status: string) =>
     api.put(`/api/v1/tasks/${taskId}`, { status }),
   complete: (taskId: number) => api.post(`/api/v1/tasks/${taskId}/complete`),
@@ -278,7 +294,7 @@ export const tasksApi = {
   review: (taskId: number, _reviewerId: number, decision: "approved" | "rejected" | "changes_requested", review_note?: string) =>
     api.post(`/api/v1/tasks/${taskId}/review`, { decision, review_note }),
   getComments: (taskId: number) =>
-    api.get(`/api/v1/tasks/${taskId}/comments`),
+    api.get<TaskComment[]>(`/api/v1/tasks/${taskId}/comments`),
   addComment: (taskId: number, _authorId: number, message: string) =>
     api.post(`/api/v1/tasks/${taskId}/comments`, {
       message,
@@ -306,28 +322,28 @@ export const adminApi = {
 // ─── Surveys (remote API) ────────────────────────────────────
 export const surveysApi = {
   submit: (employeeId: number, data: SubmitSurveyRequest) =>
-    api.post(`/api/v1/surveys/${employeeId}`, data),
-  get: (employeeId: number) => api.get(`/api/v1/surveys/${employeeId}`),
+    api.post<Survey>(`/api/v1/surveys/${employeeId}`, data),
+  get: (employeeId: number) => api.get<Survey[]>(`/api/v1/surveys/${employeeId}`),
 };
 
 // ─── Dashboard (remote API) ──────────────────────────────────
 export const dashboardApi = {
-  getOverview: () => api.get("/api/v1/dashboard/overview"),
-  getTeamProductivity: () => api.get("/api/v1/dashboard/team-productivity"),
-  getBurnoutAlerts: () => api.get("/api/v1/dashboard/burnout-alerts"),
+  getOverview: () => api.get<DashboardOverview>("/api/v1/dashboard/overview"),
+  getTeamProductivity: () => api.get<TeamProductivity[]>("/api/v1/dashboard/team-productivity"),
+  getBurnoutAlerts: () => api.get<BurnoutAlert[]>("/api/v1/dashboard/burnout-alerts"),
   getEmployeeSummary: (id: number) =>
-    api.get(`/api/v1/dashboard/employee/${id}/summary`),
+    api.get<EmployeeSummary>(`/api/v1/dashboard/employee/${id}/summary`),
 };
 
 // ─── Holidays (remote API) ───────────────────────────────────
 export const holidaysApi = {
-  list: () => api.get("/api/v1/holidays/"),
+  list: () => api.get<Holiday[]>("/api/v1/holidays/"),
 };
 
 // ─── Devices (remote API) ────────────────────────────────────
 export const devicesApi = {
   getForEmployee: (employeeId: number) =>
-    api.get(`/api/v1/devices/employee/${employeeId}`),
+    api.get<Device[]>(`/api/v1/devices/employee/${employeeId}`),
   register: (data: RegisterDeviceRequest) =>
     api.post("/api/v1/devices/", data),
   block: (deviceId: number, reason?: string) =>
@@ -341,9 +357,9 @@ export const devicesApi = {
 // ─── ML / Predictions (remote API) ───────────────────────────
 export const predictionsApi = {
   get: (employeeId: number) =>
-    api.get(`/api/v1/ml/predictions/${employeeId}`),
+    api.get<Prediction[]>(`/api/v1/ml/predictions/${employeeId}`),
   getLatest: (employeeId: number) =>
-    api.get(`/api/v1/ml/predictions/latest/${employeeId}`),
+    api.get<LatestPredictions>(`/api/v1/ml/predictions/latest/${employeeId}`),
 };
 
 // ─── Attendance (remote API) ─────────────────────────────────

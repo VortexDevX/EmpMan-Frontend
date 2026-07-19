@@ -432,22 +432,22 @@ function DeviceDetailPanel({
             <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-2">Recent Sessions</p>
             {Array.isArray(sessions) && sessions.length > 0 ? (
               <div className="space-y-2">
-                {sessions.slice(0, 5).map((s: any, i: number) => (
-                  <div key={i} className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-2.5">
+                {sessions.slice(0, 5).map((session) => (
+                  <div key={session.id} className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-2.5">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs font-medium text-slate-700 dark:text-slate-300 font-mono">{s.ip_address || s.ip || "—"}</span>
+                      <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{session.source || "Network"}</span>
                       <span
                         className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                          s.is_active
+                          !session.session_end
                             ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600"
                             : "bg-slate-100 dark:bg-slate-700 text-slate-500"
                         }`}
                       >
-                        {s.is_active ? "Active" : "Ended"}
+                        {!session.session_end ? "Active" : "Ended"}
                       </span>
                     </div>
                     <p className="text-[10px] text-slate-400 mt-1">
-                      {s.created_at ? new Date(s.created_at).toLocaleString() : "—"}
+                      {session.session_start ? new Date(session.session_start).toLocaleString() : "—"}
                     </p>
                   </div>
                 ))}

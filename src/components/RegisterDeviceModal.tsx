@@ -3,7 +3,7 @@
  */
 import { useState } from "react";
 import { devicesApi } from "../lib/api";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 
 interface Props {
   onClose: () => void;

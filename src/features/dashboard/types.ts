@@ -1,4 +1,12 @@
-import type { AuthUser } from "../../lib/types";
+import type {
+  AuthUser,
+  BurnoutAlert,
+  DashboardOverview,
+  EmployeeSummary,
+  GatewayConnectedDevice,
+  ProductivityChartRow,
+  Task,
+} from "../../lib/types";
 
 export interface KpiCardProps {
   label: string;
@@ -15,17 +23,17 @@ export interface DashboardData {
   isEmployee: boolean;
   isLeadership: boolean;
   showPersonalExecution: boolean;
-  overview: any;
+  overview: DashboardOverview | undefined;
   isLoading: boolean;
-  pendingTasks: any[];
-  completedTasks: any[];
-  chartData: any[];
-  alerts: any[];
-  connectedDevices: any[];
+  pendingTasks: Task[];
+  completedTasks: Task[];
+  chartData: ProductivityChartRow[];
+  alerts: BurnoutAlert[];
+  connectedDevices: GatewayConnectedDevice[];
   blockedMacs: string[];
   burnoutRisk: string;
   workloadStatus: string;
-  mySummary: any;
+  mySummary: EmployeeSummary | undefined;
   refreshing: boolean;
   handleRefresh: () => Promise<void>;
 }

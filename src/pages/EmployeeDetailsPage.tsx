@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi, devicesApi, employeesApi, predictionsApi, tasksApi } from "../lib/api";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
+import { getApiDetail, getApiStatus } from "../lib/errors";
 
 function StatCard({ label, value, icon }: { label: string; value: string | number; icon: string }) {
   return (
@@ -89,8 +90,8 @@ export function EmployeeDetailsPage() {
   });
 
   const taskList = Array.isArray(tasks) ? tasks : [];
-  const pendingCount = taskList.filter((t: any) => t.status === "pending" || t.status === "in_progress").length;
-  const completedCount = taskList.filter((t: any) => t.status === "completed" || t.status === "done").length;
+  const pendingCount = taskList.filter((task) => task.status === "pending" || task.status === "in_progress").length;
+  const completedCount = taskList.filter((task) => task.status === "completed").length;
   const deviceList = Array.isArray(devices) ? devices : [];
   const predictionList = Array.isArray(predictionHistory) ? predictionHistory : [];
 
@@ -120,8 +121,8 @@ export function EmployeeDetailsPage() {
   }
 
   if (employeeError || !employee) {
-    const status = (employeeError as any)?.response?.status;
-    const detail = (employeeError as any)?.response?.data?.detail;
+    const status = getApiStatus(employeeError);
+    const detail = getApiDetail(employeeError);
     return (
       <div className="space-y-4">
         <Link to="/admin/employees" className="text-sm text-cyan-700 dark:text-cyan-300 hover:underline inline-flex items-center gap-1">
@@ -181,7 +182,7 @@ export function EmployeeDetailsPage() {
             </div>
           ) : taskList.length > 0 ? (
             <div className="mt-3 divide-y divide-slate-200/60 dark:divide-slate-700/60">
-              {taskList.slice(0, 12).map((task: any) => (
+              {taskList.slice(0, 12).map((task) => (
                 <div key={task.id} className="py-3 flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{task.title}</p>
@@ -204,10 +205,10 @@ export function EmployeeDetailsPage() {
           <h2 className="text-base font-semibold text-slate-900 dark:text-white">Devices</h2>
           {deviceList.length > 0 ? (
             <div className="mt-3 space-y-2">
-              {deviceList.slice(0, 8).map((d: any) => (
-                <div key={d.id || d.mac_address} className="rounded-lg border border-slate-200/70 dark:border-slate-700/60 p-3">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">{d.device_name || "Device"}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{d.mac_address || d.mac || "—"} • {d.ip_address || d.ip || "—"}</p>
+              {deviceList.slice(0, 8).map((device) => (
+                <div key={device.id} className="rounded-lg border border-slate-200/70 dark:border-slate-700/60 p-3">
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">{device.device_name || "Device"}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{device.mac_address || "—"} • {device.ip_address || "—"}</p>
                 </div>
               ))}
             </div>
@@ -220,14 +221,14 @@ export function EmployeeDetailsPage() {
           <h2 className="text-base font-semibold text-slate-900 dark:text-white">Prediction History</h2>
           {canViewRestrictedData && predictionList.length > 0 ? (
             <div className="mt-3 space-y-2">
-              {predictionList.slice(0, 10).map((p: any) => (
-                <div key={p.id} className="rounded-lg border border-slate-200/70 dark:border-slate-700/60 p-3">
-                  <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{p.prediction_type}</p>
+              {predictionList.slice(0, 10).map((prediction) => (
+                <div key={prediction.id} className="rounded-lg border border-slate-200/70 dark:border-slate-700/60 p-3">
+                  <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{prediction.prediction_type}</p>
                   <p className="text-sm font-semibold text-slate-900 dark:text-white mt-1">
-                    Score {toPercent(p.score)}
+                    Score {toPercent(prediction.score)}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {fmtDate(p.prediction_date)} • Risk {String(p.risk_level || "unknown").toUpperCase()}
+                    {fmtDate(prediction.prediction_date)} • Risk {String(prediction.risk_level || "unknown").toUpperCase()}
                   </p>
                 </div>
               ))}
@@ -242,4 +243,3 @@ export function EmployeeDetailsPage() {
     </div>
   );
 }
-

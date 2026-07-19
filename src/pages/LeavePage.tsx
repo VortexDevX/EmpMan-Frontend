@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { leaveApi } from "../lib/api";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 
 export function LeavePage() {
   const { user } = useAuth();
@@ -71,7 +71,7 @@ export function LeavePage() {
             onChange={(e) => setLeaveTypeId(e.target.value ? Number(e.target.value) : "")}
           >
             <option value="">Select leave type</option>
-            {(types as any[]).map((t: any) => (
+            {types.map((t) => (
               <option key={t.id} value={t.id}>{t.name}</option>
             ))}
           </select>
@@ -98,7 +98,7 @@ export function LeavePage() {
       <div className="surface-card p-5">
         <h2 className="text-base font-semibold text-slate-900 dark:text-white">Balances</h2>
         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-          {(balances as any[]).map((b: any) => (
+          {balances.map((b) => (
             <div key={b.id} className="glass-soft p-3">
               <p className="text-sm font-medium text-slate-900 dark:text-white">Type #{b.leave_type_id} ({b.leave_year})</p>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -115,7 +115,7 @@ export function LeavePage() {
           {isLeadership ? "All Leave Requests" : "My Leave Requests"}
         </h2>
         <div className="mt-3 divide-y divide-slate-200/70 dark:divide-slate-700/60">
-          {(requests as any[]).map((r: any) => (
+          {requests.map((r) => (
             <div key={r.id} className="py-3 flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-medium text-slate-900 dark:text-white">

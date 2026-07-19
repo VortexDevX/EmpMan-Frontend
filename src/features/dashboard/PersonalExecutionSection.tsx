@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { KPICard, SectionTitle } from "./DashboardPrimitives";
+import type { EmployeeSummary, Task } from "../../lib/types";
 
 export function PersonalExecutionSection({
   isManager,
@@ -10,9 +11,9 @@ export function PersonalExecutionSection({
   workloadStatus,
 }: {
   isManager: boolean;
-  pendingTasks: any[];
-  completedTasks: any[];
-  mySummary: any;
+  pendingTasks: Task[];
+  completedTasks: Task[];
+  mySummary: EmployeeSummary | undefined;
   burnoutRisk: string;
   workloadStatus: string;
 }) {
@@ -49,7 +50,7 @@ export function PersonalExecutionSection({
         </div>
         <div className="divide-y divide-slate-200/60 dark:divide-slate-700/50">
           {pendingTasks.length > 0 ? (
-            pendingTasks.slice(0, 5).map((task: any) => (
+            pendingTasks.slice(0, 5).map((task) => (
               <div key={task.id} className="px-6 py-3.5 flex items-center justify-between">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{task.title}</p>

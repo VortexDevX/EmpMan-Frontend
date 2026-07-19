@@ -1,5 +1,6 @@
 import { gatewayAdminEnabled } from "../../lib/deployment";
 import { KPICard, SectionTitle } from "./DashboardPrimitives";
+import type { GatewayConnectedDevice } from "../../lib/types";
 
 export function GatewayStatusSection({
   isAdmin,
@@ -7,7 +8,7 @@ export function GatewayStatusSection({
   blockedMacs,
 }: {
   isAdmin: boolean;
-  connectedDevices: any[];
+  connectedDevices: GatewayConnectedDevice[];
   blockedMacs: string[];
 }) {
   if (!isAdmin) return null;
@@ -29,7 +30,7 @@ export function GatewayStatusSection({
         <KPICard label="Connected Devices" value={connectedDevices.length} icon="router" tone="blue" />
         <KPICard
           label="Authenticated Online"
-          value={connectedDevices.filter((d: any) => d.authenticated && !d.blocked).length}
+          value={connectedDevices.filter((device) => device.authenticated && !device.blocked).length}
           icon="wifi"
           tone="teal"
         />

@@ -41,7 +41,7 @@ export function useAdminDevices() {
     queryKey: ["admin", "sessions", selectedDevice?.employee_id],
     queryFn: async () => {
       const res = await gatewayApi.getEmployeeSessions(selectedDevice!.employee_id!);
-      return res.data?.data || res.data || [];
+      return res.data;
     },
     enabled: gatewayAdminEnabled && !!selectedDevice?.employee_id,
   });

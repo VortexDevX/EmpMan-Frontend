@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { devicesApi } from "../lib/api";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 import type { Device } from "../lib/types";
 import { RegisterDeviceModal } from "../components/RegisterDeviceModal";
 import { StatusBadge } from "../components/ui/StatusBadge";

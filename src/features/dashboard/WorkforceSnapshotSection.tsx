@@ -1,15 +1,17 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { EmployeeLink } from "../../components/EmployeeLink";
-import { KPICard, SectionTitle, score } from "./DashboardPrimitives";
+import { KPICard, SectionTitle } from "./DashboardPrimitives";
+import type { BurnoutAlert, DashboardOverview, ProductivityChartRow } from "../../lib/types";
+import { score } from "./formatters";
 
 export function WorkforceSnapshotSection({
   overview,
   alerts,
   chartData,
 }: {
-  overview: any;
-  alerts: any[];
-  chartData: any[];
+  overview: DashboardOverview | undefined;
+  alerts: BurnoutAlert[];
+  chartData: ProductivityChartRow[];
 }) {
   return (
     <>
@@ -47,7 +49,7 @@ export function WorkforceSnapshotSection({
           </div>
           {chartData.length > 0 && (
             <div className="pt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-              {chartData.slice(0, 12).map((row: any) => (
+              {chartData.slice(0, 12).map((row) => (
                 <EmployeeLink key={row.employee_id} employeeId={row.employee_id}>
                   Employee #{row.employee_id}: {score(row.avg_productivity, 1)}%
                 </EmployeeLink>
@@ -60,7 +62,7 @@ export function WorkforceSnapshotSection({
           <SectionTitle title="Burnout Alerts" subtitle="Employees needing review today." />
           <div className="space-y-2 max-h-72 overflow-auto pr-1">
             {alerts.length > 0 ? (
-              alerts.slice(0, 8).map((alert: any, idx: number) => (
+              alerts.slice(0, 8).map((alert, idx) => (
                 <div key={idx} className="rounded-xl border border-slate-200/70 dark:border-slate-700/60 p-3">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-medium text-slate-900 dark:text-white truncate">

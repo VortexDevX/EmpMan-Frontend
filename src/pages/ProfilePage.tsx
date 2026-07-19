@@ -1,10 +1,11 @@
 // src/pages/ProfilePage.tsx
 import { useQuery } from "@tanstack/react-query";
 import { employeesApi, departmentsApi } from "../lib/api";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 import { Card } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { PageLoader } from "../components/ui/LoadingSpinner";
+import { getApiStatus } from "../lib/errors";
 
 export function ProfilePage() {
   const { user } = useAuth();
@@ -21,9 +22,9 @@ export function ProfilePage() {
       try {
         const res = await employeesApi.getProfile(user!.employee_id);
         return res.data;
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Some employees may not have a profile yet.
-        if (err?.response?.status === 404) return null;
+        if (getApiStatus(err) === 404) return null;
         throw err;
       }
     },
@@ -37,7 +38,7 @@ export function ProfilePage() {
 
   const getDeptName = (deptId: number) => {
     if (!Array.isArray(departments)) return `Department #${deptId}`;
-    const dept = departments.find((d: any) => d.id === deptId);
+    const dept = departments.find((department) => department.id === deptId);
     return dept?.name || `Department #${deptId}`;
   };
 
