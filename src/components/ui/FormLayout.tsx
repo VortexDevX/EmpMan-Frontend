@@ -72,8 +72,12 @@ export function FormAlert({ tone, children }: FormAlertProps) {
   const icon = tone === "success" ? "check_circle" : "error";
 
   return (
-    <div className={`mb-4 p-3 rounded-lg border text-sm flex items-start gap-2 ${styles}`}>
-      <span className="material-symbols-outlined text-[18px] mt-0.5 shrink-0">{icon}</span>
+    <div
+      className={`mb-4 p-3 rounded-lg border text-sm flex items-start gap-2 ${styles}`}
+      role={tone === "error" ? "alert" : "status"}
+      aria-live={tone === "error" ? "assertive" : "polite"}
+    >
+      <span className="material-symbols-outlined text-[18px] mt-0.5 shrink-0" aria-hidden="true">{icon}</span>
       <span>{children}</span>
     </div>
   );

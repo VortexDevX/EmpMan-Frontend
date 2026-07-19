@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import type { AdminEmployee } from "./types";
 
@@ -18,6 +19,22 @@ export function EmployeeActionsModal({
   togglePending: boolean;
   deletePending: boolean;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!employee) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleEscape);
+    dialogRef.current?.querySelector<HTMLElement>("button")?.focus();
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      previouslyFocused?.focus();
+    };
+  }, [employee, onClose]);
+
   if (!employee) return null;
 
   return (
@@ -26,12 +43,16 @@ export function EmployeeActionsModal({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="employee-actions-title"
         className="surface-card w-full max-w-lg p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h3 id="employee-actions-title" className="text-lg font-semibold text-slate-900 dark:text-white">
               {employee.full_name}
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -39,10 +60,12 @@ export function EmployeeActionsModal({
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+            aria-label="Close employee actions"
           >
-            <span className="material-symbols-outlined text-[20px]">close</span>
+            <span aria-hidden="true" className="material-symbols-outlined text-[20px]">close</span>
           </button>
         </div>
 
@@ -54,12 +77,14 @@ export function EmployeeActionsModal({
 
         <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
           <button
+            type="button"
             onClick={() => navigate(`/employees/${employee.id}`)}
             className="btn-secondary"
           >
             Open Details
           </button>
           <button
+            type="button"
             onClick={() => onToggleActive(employee)}
             className="btn-secondary"
             disabled={togglePending}
@@ -67,6 +92,7 @@ export function EmployeeActionsModal({
             {employee.is_active ? "Deactivate" : "Activate"}
           </button>
           <button
+            type="button"
             onClick={() => {
               if (window.confirm(`Delete ${employee.full_name}? This cannot be undone.`)) {
                 onDelete(employee.id);

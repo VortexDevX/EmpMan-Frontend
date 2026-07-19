@@ -15,37 +15,37 @@ export function useDashboardData() {
   const isLeadership = isAdmin || isManager;
   const showPersonalExecution = !isAdmin;
 
-  const { data: overview, isLoading } = useQuery({
+  const { data: overview, isLoading, error: overviewError } = useQuery({
     queryKey: ["dashboard-overview"],
     queryFn: () => dashboardApi.getOverview().then((r) => r.data),
     enabled: isLeadership,
   });
 
-  const { data: productivity } = useQuery({
+  const { data: productivity, error: productivityError } = useQuery({
     queryKey: ["team-productivity"],
     queryFn: () => dashboardApi.getTeamProductivity().then((r) => r.data),
     enabled: isLeadership,
   });
 
-  const { data: burnoutAlerts } = useQuery({
+  const { data: burnoutAlerts, error: burnoutError } = useQuery({
     queryKey: ["burnout-alerts"],
     queryFn: () => dashboardApi.getBurnoutAlerts().then((r) => r.data),
     enabled: isLeadership,
   });
 
-  const { data: myTasks } = useQuery({
+  const { data: myTasks, error: tasksError } = useQuery({
     queryKey: ["my-tasks", user?.employee_id],
     queryFn: () => tasksApi.getForEmployee(user!.employee_id).then((r) => r.data),
     enabled: !!user?.employee_id && showPersonalExecution,
   });
 
-  const { data: mySummary } = useQuery({
+  const { data: mySummary, error: summaryError } = useQuery({
     queryKey: ["my-summary", user?.employee_id],
     queryFn: () => dashboardApi.getEmployeeSummary(user!.employee_id).then((r) => r.data),
     enabled: !!user?.employee_id && showPersonalExecution,
   });
 
-  const { data: latestPredictions } = useQuery({
+  const { data: latestPredictions, error: predictionsError } = useQuery({
     queryKey: ["latest-predictions", user?.employee_id],
     queryFn: () => predictionsApi.getLatest(user!.employee_id).then((r) => r.data),
     enabled: !!user?.employee_id && showPersonalExecution,
@@ -78,8 +78,11 @@ export function useDashboardData() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await queryClient.invalidateQueries();
-    setRefreshing(false);
+    try {
+      await queryClient.invalidateQueries();
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   return {
@@ -91,6 +94,7 @@ export function useDashboardData() {
     showPersonalExecution,
     overview,
     isLoading,
+    error: overviewError || productivityError || burnoutError || tasksError || summaryError || predictionsError,
     pendingTasks,
     completedTasks,
     chartData,

@@ -6,17 +6,18 @@ import { Card } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { PageLoader } from "../components/ui/LoadingSpinner";
 import { getApiStatus } from "../lib/errors";
+import { EmptyState } from "../components/ui/EmptyState";
 
 export function ProfilePage() {
   const { user } = useAuth();
 
-  const { data: employee, isLoading: loadingEmployee } = useQuery({
+  const { data: employee, isLoading: loadingEmployee, error: employeeError } = useQuery({
     queryKey: ["employee", user?.employee_id],
     queryFn: () => employeesApi.get(user!.employee_id).then((r) => r.data),
     enabled: !!user?.employee_id,
   });
 
-  const { data: profile, isLoading: loadingProfile } = useQuery({
+  const { data: profile, isLoading: loadingProfile, error: profileError } = useQuery({
     queryKey: ["profile", user?.employee_id],
     queryFn: async () => {
       try {
@@ -43,6 +44,18 @@ export function ProfilePage() {
   };
 
   if (loadingEmployee || loadingProfile) return <PageLoader />;
+
+  if (employeeError || profileError) {
+    return (
+      <Card>
+        <EmptyState
+          icon="person_alert"
+          title="Profile unavailable"
+          description="Your profile could not be loaded. Please refresh the page or try again later."
+        />
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

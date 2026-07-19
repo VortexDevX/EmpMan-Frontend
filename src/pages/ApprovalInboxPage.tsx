@@ -1,13 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { approvalsApi, leaveApi, tasksApi } from "../lib/api";
 import { useAuth } from "../contexts/useAuth";
+import { FormAlert } from "../components/ui/FormLayout";
+import { PageLoader } from "../components/ui/LoadingSpinner";
+import { EmptyState } from "../components/ui/EmptyState";
+import { getApiErrorMessage } from "../lib/errors";
 
 export function ApprovalInboxPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const reviewerId = user?.employee_id || 0;
 
-  const { data: approvals = [], isLoading } = useQuery({
+  const { data: approvals = [], isLoading, error: loadError } = useQuery({
     queryKey: ["approvals", "pending"],
     queryFn: () => approvalsApi.listPending().then((r) => r.data),
   });
@@ -32,6 +36,9 @@ export function ApprovalInboxPage() {
     mutationFn: (taskId: number) => tasksApi.review(taskId, reviewerId, "rejected", "Rejected in review"),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["approvals"] }),
   });
+  const mutations = [leaveApprove, leaveReject, taskApprove, taskChanges, taskReject];
+  const actionError = mutations.find((mutation) => mutation.error)?.error;
+  const actionPending = mutations.some((mutation) => mutation.isPending);
 
   return (
     <div className="space-y-6">
@@ -43,10 +50,18 @@ export function ApprovalInboxPage() {
       </div>
 
       <div className="surface-card p-5">
+        {loadError && (
+          <FormAlert tone="error">
+            {getApiErrorMessage(loadError, "Could not load the approval queue.")}
+          </FormAlert>
+        )}
+        {actionError && (
+          <FormAlert tone="error">
+            {getApiErrorMessage(actionError, "The approval action could not be completed.")}
+          </FormAlert>
+        )}
         {isLoading ? (
-          <div className="py-8 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-cyan-600" />
-          </div>
+          <PageLoader label="Loading approval queue" />
         ) : (
           <div className="space-y-3">
             {approvals.map((a) => (
@@ -66,21 +81,21 @@ export function ApprovalInboxPage() {
                 <div className="mt-3 flex flex-wrap gap-2">
                   {a.approval_type === "leave" ? (
                     <>
-                      <button className="btn-primary" onClick={() => leaveApprove.mutate(a.reference_id)}>Approve</button>
-                      <button className="btn-secondary" onClick={() => leaveReject.mutate(a.reference_id)}>Reject</button>
+                      <button type="button" className="btn-primary" disabled={actionPending} onClick={() => leaveApprove.mutate(a.reference_id)}>Approve</button>
+                      <button type="button" className="btn-secondary" disabled={actionPending} onClick={() => leaveReject.mutate(a.reference_id)}>Reject</button>
                     </>
                   ) : (
                     <>
-                      <button className="btn-primary" onClick={() => taskApprove.mutate(a.reference_id)}>Approve</button>
-                      <button className="btn-secondary" onClick={() => taskChanges.mutate(a.reference_id)}>Request Changes</button>
-                      <button className="btn-secondary" onClick={() => taskReject.mutate(a.reference_id)}>Reject</button>
+                      <button type="button" className="btn-primary" disabled={actionPending} onClick={() => taskApprove.mutate(a.reference_id)}>Approve</button>
+                      <button type="button" className="btn-secondary" disabled={actionPending} onClick={() => taskChanges.mutate(a.reference_id)}>Request Changes</button>
+                      <button type="button" className="btn-secondary" disabled={actionPending} onClick={() => taskReject.mutate(a.reference_id)}>Reject</button>
                     </>
                   )}
                 </div>
               </div>
             ))}
             {approvals.length === 0 && (
-              <p className="text-sm text-slate-500 dark:text-slate-400">No pending approvals.</p>
+              <EmptyState icon="inbox" title="Queue cleared" description="There are no pending approvals." />
             )}
           </div>
         )}

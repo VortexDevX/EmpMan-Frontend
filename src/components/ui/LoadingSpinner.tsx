@@ -7,18 +7,18 @@ export function LoadingSpinner({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   };
 
   return (
-    <div className="flex items-center justify-center p-8">
-      <div className={`animate-spin rounded-full border-2 border-slate-200 border-t-blue-600 ${sizes[size]}`} />
+    <div className="flex items-center justify-center p-8" role="status" aria-label="Loading">
+      <div className={`animate-spin rounded-full border-2 border-slate-200 border-t-blue-600 ${sizes[size]}`} aria-hidden="true" />
     </div>
   );
 }
 
-export function PageLoader() {
+export function PageLoader({ label = "Loading" }: { label?: string }) {
   return (
-    <div className="min-h-[400px] flex items-center justify-center">
+    <div className="min-h-[400px] flex items-center justify-center" role="status" aria-live="polite">
       <div className="flex flex-col items-center gap-4">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-200 border-t-blue-600" />
-        <p className="text-sm text-slate-500">Loading...</p>
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-200 border-t-blue-600" aria-hidden="true" />
+        <p className="text-sm text-slate-500">{label}…</p>
       </div>
     </div>
   );

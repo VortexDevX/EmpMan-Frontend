@@ -55,22 +55,26 @@ export function EmployeesTable({
               </span>
             </div>
             <div className="flex items-center justify-end gap-1">
-              {canManage && <button
+              <button
+                type="button"
                 onClick={() => navigate(`/employees/${emp.id}`)}
                 className="p-2 rounded-lg text-slate-400 hover:text-primary-700 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
                 title="Open details page"
+                aria-label={`Open details for ${emp.full_name}`}
               >
-                <span className="material-symbols-outlined text-[18px]">visibility</span>
-              </button>}
-              <button
+                <span aria-hidden="true" className="material-symbols-outlined text-[18px]">visibility</span>
+              </button>
+              {canManage && <button
+                type="button"
                 onClick={() => onToggleActive(emp)}
                 className="p-2 rounded-lg text-slate-400 hover:text-primary-700 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
                 title={emp.is_active ? "Deactivate" : "Activate"}
+                aria-label={`${emp.is_active ? "Deactivate" : "Activate"} ${emp.full_name}`}
               >
-                <span className="material-symbols-outlined text-[18px]">
+                <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
                   {emp.is_active ? "person_off" : "person_check"}
                 </span>
-              </button>
+              </button>}
             </div>
           </div>
         ))}
@@ -141,22 +145,26 @@ export function EmployeesTable({
                   </td>
                   <td className="px-5 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      {canManage && <button
+                      <button
+                        type="button"
                         onClick={() => navigate(`/employees/${emp.id}`)}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-primary-700 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
                         title="Open details page"
+                        aria-label={`Open details for ${emp.full_name}`}
                       >
-                        <span className="material-symbols-outlined text-[18px]">visibility</span>
-                      </button>}
-                      <button
+                        <span aria-hidden="true" className="material-symbols-outlined text-[18px]">visibility</span>
+                      </button>
+                      {canManage && <button
+                        type="button"
                         onClick={() => onToggleActive(emp)}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-primary-700 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
                         title={emp.is_active ? "Deactivate" : "Activate"}
+                        aria-label={`${emp.is_active ? "Deactivate" : "Activate"} ${emp.full_name}`}
                       >
-                        <span className="material-symbols-outlined text-[18px]">
+                        <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
                           {emp.is_active ? "person_off" : "person_check"}
                         </span>
-                      </button>
+                      </button>}
                     </div>
                   </td>
                 </tr>

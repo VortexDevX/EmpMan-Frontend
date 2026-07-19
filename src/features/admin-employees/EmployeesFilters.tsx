@@ -12,8 +12,11 @@ export function EmployeesFilters({
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
       <div className="flex items-center gap-2 flex-1 h-10 bg-slate-100 dark:bg-slate-800 rounded-lg px-3">
-        <span className="material-symbols-outlined text-[20px] text-slate-400">search</span>
+        <span aria-hidden="true" className="material-symbols-outlined text-[20px] text-slate-400">search</span>
+        <label htmlFor="employee-search" className="sr-only">Search employees</label>
         <input
+          id="employee-search"
+          name="employee-search"
           type="text"
           placeholder="Search by code, name, or email..."
           value={searchQuery}

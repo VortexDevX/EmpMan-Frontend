@@ -3,6 +3,20 @@ import { useState, type FormEvent } from "react";
 import { useAuth } from "../contexts/useAuth";
 import { authApi } from "../lib/api";
 import { getApiErrorMessage } from "../lib/errors";
+import { FormAlert } from "../components/ui/FormLayout";
+
+const PASSWORD_POLICY =
+  "Use at least 12 characters with uppercase, lowercase, number, and symbol.";
+
+function isStrongPassword(password: string): boolean {
+  return (
+    password.length >= 12 &&
+    /[a-z]/.test(password) &&
+    /[A-Z]/.test(password) &&
+    /\d/.test(password) &&
+    /[^A-Za-z0-9]/.test(password)
+  );
+}
 
 export function SettingsPage() {
   const { user } = useAuth();
@@ -31,8 +45,8 @@ export function SettingsPage() {
       return;
     }
 
-    if (newPassword.length < 8) {
-      setPasswordError("Password must be at least 8 characters.");
+    if (!isStrongPassword(newPassword)) {
+      setPasswordError(PASSWORD_POLICY);
       return;
     }
 
@@ -78,19 +92,13 @@ export function SettingsPage() {
         </div>
         <div className="p-6">
           {passwordError && (
-            <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm flex items-start gap-2">
-              <span className="material-symbols-outlined text-[18px] mt-0.5 shrink-0">error</span>
-              <span>{passwordError}</span>
-            </div>
+            <FormAlert tone="error">{passwordError}</FormAlert>
           )}
           {passwordSuccess && (
-            <div className="mb-4 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 text-sm flex items-start gap-2">
-              <span className="material-symbols-outlined text-[18px] mt-0.5 shrink-0">check_circle</span>
-              <span>{passwordSuccess}</span>
-            </div>
+            <FormAlert tone="success">{passwordSuccess}</FormAlert>
           )}
 
-          <form onSubmit={handlePasswordChange} className="flex flex-col gap-4 max-w-md">
+          <form onSubmit={handlePasswordChange} className="flex flex-col gap-4 max-w-md" aria-busy={passwordLoading}>
             <label className="flex flex-col">
               <span className="text-slate-700 dark:text-slate-300 text-sm font-medium pb-1.5">Current Password</span>
               <input
@@ -98,6 +106,7 @@ export function SettingsPage() {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
+                autoComplete="current-password"
                 className="input-shell h-10 px-3 text-sm"
               />
             </label>
@@ -108,7 +117,9 @@ export function SettingsPage() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
-                minLength={8}
+                minLength={12}
+                autoComplete="new-password"
+                aria-describedby="password-policy"
                 className="input-shell h-10 px-3 text-sm"
               />
             </label>
@@ -119,10 +130,15 @@ export function SettingsPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                minLength={8}
+                minLength={12}
+                autoComplete="new-password"
                 className="input-shell h-10 px-3 text-sm"
               />
             </label>
+
+            <p id="password-policy" className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              {PASSWORD_POLICY}
+            </p>
 
             <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 cursor-pointer">
               <input
@@ -167,6 +183,8 @@ export function SettingsPage() {
           <div className="flex gap-3">
             <button
               onClick={() => handleThemeChange("light")}
+              type="button"
+              aria-pressed={theme === "light"}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 transition-all text-sm font-medium ${
                 theme === "light"
                   ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
@@ -178,6 +196,8 @@ export function SettingsPage() {
             </button>
             <button
               onClick={() => handleThemeChange("dark")}
+              type="button"
+              aria-pressed={theme === "dark"}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 transition-all text-sm font-medium ${
                 theme === "dark"
                   ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"

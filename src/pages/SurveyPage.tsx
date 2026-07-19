@@ -6,6 +6,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { surveysApi } from "../lib/api";
 import { useAuth } from "../contexts/useAuth";
 import type { Survey } from "../lib/types";
+import { getApiErrorMessage } from "../lib/errors";
+import { FormAlert } from "../components/ui/FormLayout";
 
 export function SurveyPage() {
   const { user } = useAuth();
@@ -47,6 +49,8 @@ export function SurveyPage() {
     return { label: "Poor", color: "text-rose-600" };
   };
 
+  const workloadLabels = ["", "Light", "Manageable", "Balanced", "Heavy", "Overloaded"];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -66,17 +70,19 @@ export function SurveyPage() {
           <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-5">Submit Feedback</h3>
 
           {submitted && (
-            <div className="mb-4 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 text-sm flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">check_circle</span>
-              Survey submitted successfully!
-            </div>
+            <FormAlert tone="success">Survey submitted successfully.</FormAlert>
+          )}
+          {submitMutation.error && (
+            <FormAlert tone="error">
+              {getApiErrorMessage(submitMutation.error, "Survey could not be submitted.")}
+            </FormAlert>
           )}
 
           <div className="flex flex-col gap-5">
             {/* Job Satisfaction (1–10) */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <label htmlFor="job-satisfaction" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   Job Satisfaction
                 </label>
                 <span className={`text-sm font-bold ${getRatingLabel(satisfaction, 10).color}`}>
@@ -84,39 +90,43 @@ export function SurveyPage() {
                 </span>
               </div>
               <input
+                id="job-satisfaction"
                 type="range"
                 min={1}
                 max={10}
                 value={satisfaction}
                 onChange={(e) => setSatisfaction(Number(e.target.value))}
                 className="w-full accent-primary-600 h-2"
+                aria-valuetext={`${satisfaction} out of 10, ${getRatingLabel(satisfaction, 10).label}`}
               />
             </div>
 
             {/* Workload Rating (1–5) */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <label htmlFor="workload-rating" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   Workload Rating
                 </label>
                 <span className={`text-sm font-bold ${getRatingLabel(workload, 5).color}`}>
-                  {workload}/5 — {getRatingLabel(workload, 5).label}
+                  {workload}/5 — {workloadLabels[workload]}
                 </span>
               </div>
               <input
+                id="workload-rating"
                 type="range"
                 min={1}
                 max={5}
                 value={workload}
                 onChange={(e) => setWorkload(Number(e.target.value))}
                 className="w-full accent-primary-600 h-2"
+                aria-valuetext={`${workload} out of 5, ${workloadLabels[workload]}`}
               />
             </div>
 
             {/* Work-Life Balance (1–5) */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <label htmlFor="work-life-balance" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   Work-Life Balance
                 </label>
                 <span className={`text-sm font-bold ${getRatingLabel(balance, 5).color}`}>
@@ -124,21 +134,24 @@ export function SurveyPage() {
                 </span>
               </div>
               <input
+                id="work-life-balance"
                 type="range"
                 min={1}
                 max={5}
                 value={balance}
                 onChange={(e) => setBalance(Number(e.target.value))}
                 className="w-full accent-primary-600 h-2"
+                aria-valuetext={`${balance} out of 5, ${getRatingLabel(balance, 5).label}`}
               />
             </div>
 
             {/* Comments */}
             <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">
+              <label htmlFor="survey-comments" className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">
                 Additional Comments (optional)
               </label>
               <textarea
+                id="survey-comments"
                 className="input-shell w-full h-20 px-3 py-2.5 text-sm resize-vertical"
                 placeholder="Any feedback or suggestions..."
                 value={comments}
@@ -147,12 +160,13 @@ export function SurveyPage() {
             </div>
 
             <button
+              type="button"
               className="btn-primary w-full disabled:opacity-55 disabled:cursor-not-allowed"
               onClick={() => submitMutation.mutate()}
               disabled={submitMutation.isPending}
             >
               {submitMutation.isPending ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" aria-hidden="true" />
               ) : (
                 <>
                   <span className="material-symbols-outlined text-[18px]">send</span>

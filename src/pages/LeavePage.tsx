@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { leaveApi } from "../lib/api";
 import { useAuth } from "../contexts/useAuth";
+import { getApiErrorMessage } from "../lib/errors";
+import { FormAlert } from "../components/ui/FormLayout";
 
 export function LeavePage() {
   const { user } = useAuth();
@@ -64,33 +66,54 @@ export function LeavePage() {
 
       <div className="surface-card p-5">
         <h2 className="text-base font-semibold text-slate-900 dark:text-white">Apply Leave</h2>
+        {applyMutation.error && (
+          <div className="mt-4">
+            <FormAlert tone="error">
+              {getApiErrorMessage(applyMutation.error, "Leave request could not be submitted.")}
+            </FormAlert>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mt-3">
-          <select
-            className="input-shell"
-            value={leaveTypeId}
-            onChange={(e) => setLeaveTypeId(e.target.value ? Number(e.target.value) : "")}
-          >
-            <option value="">Select leave type</option>
-            {types.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
-          <input type="date" className="input-shell" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-          <input type="date" className="input-shell" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-          <input
-            className="input-shell"
-            placeholder="Reason"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-          />
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">
+            Leave type
+            <select
+              className="input-shell"
+              value={leaveTypeId}
+              required
+              onChange={(e) => setLeaveTypeId(e.target.value ? Number(e.target.value) : "")}
+            >
+              <option value="">Select leave type</option>
+              {types.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">
+            Start date
+            <input type="date" className="input-shell" value={startDate} required onChange={(e) => setStartDate(e.target.value)} />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">
+            End date
+            <input type="date" className="input-shell" value={endDate} min={startDate || undefined} required onChange={(e) => setEndDate(e.target.value)} />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">
+            Reason <span className="sr-only">optional</span>
+            <input
+              className="input-shell"
+              placeholder="Optional context"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            />
+          </label>
         </div>
         <div className="mt-3">
           <button
+            type="button"
             className="btn-primary"
             disabled={!leaveTypeId || !startDate || !endDate || applyMutation.isPending}
             onClick={() => applyMutation.mutate()}
           >
-            Apply Leave
+            {applyMutation.isPending ? "Submitting…" : "Apply Leave"}
           </button>
         </div>
       </div>
@@ -115,6 +138,11 @@ export function LeavePage() {
           {isLeadership ? "All Leave Requests" : "My Leave Requests"}
         </h2>
         <div className="mt-3 divide-y divide-slate-200/70 dark:divide-slate-700/60">
+          {cancelMutation.error && (
+            <FormAlert tone="error">
+              {getApiErrorMessage(cancelMutation.error, "Leave request could not be cancelled.")}
+            </FormAlert>
+          )}
           {requests.map((r) => (
             <div key={r.id} className="py-3 flex items-center justify-between gap-3">
               <div>

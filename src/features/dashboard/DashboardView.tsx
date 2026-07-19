@@ -3,18 +3,22 @@ import { GatewayStatusSection } from "./GatewayStatusSection";
 import { PersonalExecutionSection } from "./PersonalExecutionSection";
 import { WorkforceSnapshotSection } from "./WorkforceSnapshotSection";
 import type { DashboardData } from "./types";
+import { FormAlert } from "../../components/ui/FormLayout";
+import { PageLoader } from "../../components/ui/LoadingSpinner";
+import { getApiErrorMessage } from "../../lib/errors";
 
 export function DashboardView(data: DashboardData) {
   if (data.isLoading && data.isLeadership) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600" />
-      </div>
-    );
+    return <PageLoader label="Loading dashboard" />;
   }
 
   return (
     <div className="space-y-6">
+      {Boolean(data.error) && (
+        <FormAlert tone="error">
+          {getApiErrorMessage(data.error, "Some dashboard data could not be loaded. Refresh to try again.")}
+        </FormAlert>
+      )}
       <DashboardHeader
         isAdmin={data.isAdmin}
         isManager={data.isManager}

@@ -1,73 +1,44 @@
-# React + TypeScript + Vite
+# Workforce OS Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React/Vite frontend for Employee Management. The production site uses the Employee API at `https://emp-manan.mvlab.cloud` and supports employee, manager, and administrator views.
 
-Currently, two official plugins are available:
+## Authentication
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Browser authentication uses an HttpOnly, Secure, SameSite session cookie. The frontend does not persist access tokens in Local Storage. State-changing API requests include a session-bound CSRF token held only in memory; refreshing the page restores both the user and CSRF state through `/api/v1/auth/session`.
 
-## React Compiler
+The API still returns a bearer token for native clients and compatibility, but this browser client intentionally ignores it.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Environment
 
-## Expanding the ESLint configuration
+Copy `.env.example` to `.env` for local overrides. `VITE_*` values are public and must never contain credentials.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_API_URL=https://emp-manan.mvlab.cloud
+VITE_ENABLE_GATEWAY_ADMIN=false
+VITE_GATEWAY_API_URL=
+VITE_GATEWAY_WITH_CREDENTIALS=false
+VITE_BASE_PATH=/
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The public Vercel frontend should leave gateway administration disabled. Enable it only for a trusted browser that can reach a correctly configured HTTPS Pi gateway.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Development
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```powershell
+npm ci
+npm run dev
 ```
+
+For a local HTTP Employee API, set `AUTH_COOKIE_SECURE=false` only in the API's local development environment. Production must keep it `true`.
+
+## Verification
+
+```powershell
+npm run lint
+npm run test
+npm run build
+npm run test:a11y
+npm audit --omit=dev
+```
+
+`npm run test:a11y` uses Microsoft Edge through Playwright. It checks desktop/mobile login accessibility and authenticated mobile navigation with mocked API responses. The broader repository test and release procedure is in `../TESTING_GUIDE.md`.

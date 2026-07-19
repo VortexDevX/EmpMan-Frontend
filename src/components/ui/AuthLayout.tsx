@@ -28,6 +28,21 @@ export function AuthPage({
         <div className={`absolute left-0 top-0 h-full w-px ${secondGlowClassName}`} />
         <div className="absolute inset-0 opacity-40 dark:opacity-20 bg-[linear-gradient(to_right,rgba(15,23,42,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.05)_1px,transparent_1px)] bg-[size:32px_32px]" />
       </div>
+      <header className="relative z-10 flex items-center justify-between px-5 py-4 sm:px-8">
+        <div className="flex items-center gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary-700 text-white shadow-lg shadow-primary-900/15">
+            <span className="material-symbols-outlined text-[22px]" aria-hidden="true">workspaces</span>
+          </div>
+          <div>
+            <p className="text-sm font-bold text-slate-950 dark:text-white section-title">Workforce OS</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">People operations command center</p>
+          </div>
+        </div>
+        <div className="hidden items-center gap-2 text-xs font-medium text-emerald-700 dark:text-emerald-300 sm:flex">
+          <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+          Secure access
+        </div>
+      </header>
       {children}
     </div>
   );
@@ -46,12 +61,12 @@ export function AuthCard({
     <div className={`w-full ${maxWidthClassName} surface-card overflow-hidden`}>
       <div className="h-1 bg-gradient-to-r from-primary-600 via-primary-500 to-blue-600" aria-hidden="true" />
       <div className="px-6 sm:px-8 pt-8 pb-2 flex flex-col items-center">
-        <div className={`mb-5 h-14 w-14 rounded-lg flex items-center justify-center ${iconClassName}`}>
+        <div className={`mb-5 h-14 w-14 rounded-2xl flex items-center justify-center ${iconClassName}`} aria-hidden="true">
           <span className="material-symbols-outlined text-[28px]">{icon}</span>
         </div>
-        <h2 className="text-slate-900 dark:text-white text-[26px] font-bold leading-tight text-center section-title">
+        <h1 className="text-slate-900 dark:text-white text-[26px] font-bold leading-tight text-center section-title">
           {title}
-        </h2>
+        </h1>
         <p className="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal text-center mt-2">
           {subtitle}
         </p>

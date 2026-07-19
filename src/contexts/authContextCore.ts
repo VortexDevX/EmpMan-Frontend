@@ -8,9 +8,9 @@ export interface AuthContextType {
   needsTotpSetup: boolean;
   pendingEmployeeId: number | null;
   pendingSetupToken: string | null;
-  login: (employeeCode: string, password: string, totpCode: string) => Promise<void>;
+  login: (employeeCode: string, password: string, totpCode: string) => Promise<AuthUser>;
   loginWithoutTotp: (employeeCode: string, password: string) => Promise<{ needsTotp: boolean; employeeId: number }>;
-  logout: () => void;
+  logout: () => Promise<void>;
   clearTotpSetup: () => void;
 }
 

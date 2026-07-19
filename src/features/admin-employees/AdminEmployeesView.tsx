@@ -5,6 +5,8 @@ import { EmployeesHeader } from "./EmployeesHeader";
 import { EmployeesStats } from "./EmployeesStats";
 import { EmployeesTable } from "./EmployeesTable";
 import type { AdminEmployeesState } from "./types";
+import { FormAlert } from "../../components/ui/FormLayout";
+import { getApiErrorMessage } from "../../lib/errors";
 
 export function AdminEmployeesView({
   canManage,
@@ -31,6 +33,14 @@ export function AdminEmployeesView({
 
   return (
     <div className="space-y-6">
+      {(toggleActiveMutation.error || deleteMutation.error) && (
+        <FormAlert tone="error">
+          {getApiErrorMessage(
+            toggleActiveMutation.error || deleteMutation.error,
+            "The employee action could not be completed.",
+          )}
+        </FormAlert>
+      )}
       <EmployeesHeader navigate={navigate} canManage={canManage} />
       <EmployeesStats stats={stats} />
       <EmployeesFilters
@@ -41,8 +51,8 @@ export function AdminEmployeesView({
       />
 
       {isLoading && (
-        <div className="flex items-center justify-center py-16">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <div className="flex items-center justify-center py-16" role="status" aria-label="Loading employees">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" aria-hidden="true" />
         </div>
       )}
 

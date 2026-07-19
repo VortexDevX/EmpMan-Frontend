@@ -1,9 +1,10 @@
 /**
  * Register Device Modal — POST /api/v1/devices/
  */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { devicesApi } from "../lib/api";
 import { useAuth } from "../contexts/useAuth";
+import { FormAlert } from "./ui/FormLayout";
 
 interface Props {
   onClose: () => void;
@@ -18,6 +19,33 @@ export function RegisterDeviceModal({ onClose, onRegistered }: Props) {
   const [deviceType, setDeviceType] = useState("laptop");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [onClose]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,39 +78,41 @@ export function RegisterDeviceModal({ onClose, onRegistered }: Props) {
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="register-device-title"
         className="w-full max-w-md surface-card overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="material-symbols-outlined text-[20px] text-primary-600 dark:text-primary-400">add_circle</span>
+          <h2 id="register-device-title" className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span aria-hidden="true" className="material-symbols-outlined text-[20px] text-primary-600 dark:text-primary-400">add_circle</span>
             Register Device
           </h2>
           <button
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
             onClick={onClose}
+            type="button"
+            aria-label="Close register device dialog"
           >
-            <span className="material-symbols-outlined text-[20px]">close</span>
+            <span aria-hidden="true" className="material-symbols-outlined text-[20px]">close</span>
           </button>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6">
-          {error && (
-            <div className="mb-4 p-3 rounded-lg bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-sm flex items-start gap-2">
-              <span className="material-symbols-outlined text-[18px] mt-0.5 shrink-0">error</span>
-              <span>{error}</span>
-            </div>
-          )}
+          {error && <FormAlert tone="error">{error}</FormAlert>}
 
           <div className="flex flex-col gap-4">
             <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">
+              <label htmlFor="device-name" className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">
                 Device Name
               </label>
               <input
                 type="text"
+                id="device-name"
                 className={inputClass}
                 placeholder="My Laptop"
                 value={deviceName}
@@ -92,11 +122,12 @@ export function RegisterDeviceModal({ onClose, onRegistered }: Props) {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">
+              <label htmlFor="mac-address" className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">
                 MAC Address
               </label>
               <input
                 type="text"
+                id="mac-address"
                 className={inputClass}
                 placeholder="58:1c:f8:f4:c3:d8"
                 value={macAddress}
@@ -105,11 +136,12 @@ export function RegisterDeviceModal({ onClose, onRegistered }: Props) {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">
+              <label htmlFor="ip-address" className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">
                 IP Address (optional)
               </label>
               <input
                 type="text"
+                id="ip-address"
                 className={inputClass}
                 placeholder="192.168.1.100"
                 value={ipAddress}
@@ -117,10 +149,11 @@ export function RegisterDeviceModal({ onClose, onRegistered }: Props) {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">
+              <label htmlFor="device-type" className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">
                 Device Type
               </label>
               <select
+                id="device-type"
                 className={inputClass}
                 value={deviceType}
                 onChange={(e) => setDeviceType(e.target.value)}
@@ -139,11 +172,7 @@ export function RegisterDeviceModal({ onClose, onRegistered }: Props) {
               className="btn-primary flex-1 disabled:opacity-55 disabled:cursor-not-allowed"
               disabled={loading}
             >
-              {loading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-              ) : (
-                "Register"
-              )}
+              {loading ? "Registering…" : "Register"}
             </button>
             <button
               type="button"

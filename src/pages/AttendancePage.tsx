@@ -2,6 +2,15 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { attendanceApi } from "../lib/api";
 import { useAuth } from "../contexts/useAuth";
+import { getApiErrorMessage } from "../lib/errors";
+import { FormAlert } from "../components/ui/FormLayout";
+
+function localDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 export function AttendancePage() {
   const { user } = useAuth();
@@ -21,7 +30,7 @@ export function AttendancePage() {
     enabled: isLeadership,
   });
 
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const today = useMemo(() => localDateKey(new Date()), []);
   const todayRecord = myAttendance.find((record) => String(record.work_date).slice(0, 10) === today);
 
   const checkIn = useMutation({
@@ -55,26 +64,37 @@ export function AttendancePage() {
             ? `Status: ${todayRecord.status} • Worked ${todayRecord.work_minutes ?? 0} mins`
             : "No record for today yet"}
         </p>
-        <div className="mt-4 flex flex-col sm:flex-row gap-3">
+        {(checkIn.error || checkOut.error) && (
+          <div className="mt-4">
+            <FormAlert tone="error">
+              {getApiErrorMessage(checkIn.error || checkOut.error, "Attendance could not be updated. Please try again.")}
+            </FormAlert>
+          </div>
+        )}
+        <div className="mt-4 flex flex-col sm:flex-row gap-3" aria-busy={checkIn.isPending || checkOut.isPending}>
+          <label htmlFor="attendance-note" className="sr-only">Optional attendance note</label>
           <input
+            id="attendance-note"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Optional note"
             className="input-shell flex-1"
           />
           <button
+            type="button"
             onClick={() => checkIn.mutate()}
             disabled={checkIn.isPending || !!todayRecord?.check_in_at}
             className="btn-primary"
           >
-            Check In
+            {checkIn.isPending ? "Checking in…" : "Check In"}
           </button>
           <button
+            type="button"
             onClick={() => checkOut.mutate()}
             disabled={checkOut.isPending || !todayRecord?.check_in_at || !!todayRecord?.check_out_at}
             className="btn-secondary"
           >
-            Check Out
+            {checkOut.isPending ? "Checking out…" : "Check Out"}
           </button>
         </div>
       </div>

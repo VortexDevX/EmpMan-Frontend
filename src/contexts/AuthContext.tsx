@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { authApi } from "../lib/api";
+import {
+  AUTH_UNAUTHORIZED_EVENT,
+  authApi,
+  setApiCsrfToken,
+} from "../lib/api";
 import type { AuthUser } from "../lib/types";
 import { AuthContext } from "./authContextCore";
 
 const STORAGE_KEYS = {
-  TOKEN: "access_token",
-  USER: "auth_user",
   TOTP_SETUP_TOKEN: "totp_setup_token",
   TOTP_EMPLOYEE_ID: "totp_employee_id",
 } as const;
@@ -46,6 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [pendingSetupToken, setPendingSetupToken] = useState<string | null>(storedSetupToken);
 
   useEffect(() => {
+    // Remove credentials written by versions before cookie-based authentication.
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("auth_user");
+
     const initialize = async () => {
       try {
         const params = parseHashParams(window.location.hash);
@@ -58,24 +64,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: data.role as AuthUser["role"],
             full_name: data.full_name,
           };
-          localStorage.setItem(STORAGE_KEYS.TOKEN, data.access_token);
-          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(authUser));
+          setApiCsrfToken(data.csrf_token);
           setUser(authUser);
           return;
         }
 
-        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
-        const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
-        if (token && storedUser) setUser(JSON.parse(storedUser) as AuthUser);
-      } catch (error) {
-        console.error("[Auth] Initialization failed", error);
-        localStorage.removeItem(STORAGE_KEYS.TOKEN);
-        localStorage.removeItem(STORAGE_KEYS.USER);
+        const { data } = await authApi.session();
+        setApiCsrfToken(data.csrf_token);
+        setUser({
+          employee_id: data.employee_id,
+          employee_code: data.employee_code,
+          role: data.role as AuthUser["role"],
+          full_name: data.full_name,
+        });
+      } catch {
+        setApiCsrfToken(null);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
     void initialize();
+  }, []);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setApiCsrfToken(null);
+      setUser(null);
+    };
+    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
+    return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
   }, []);
 
   const login = useCallback(async (employeeCode: string, password: string, totpCode: string) => {
@@ -86,13 +104,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: data.role as AuthUser["role"],
       full_name: data.full_name,
     };
-    localStorage.setItem(STORAGE_KEYS.TOKEN, data.access_token);
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(authUser));
+    setApiCsrfToken(data.csrf_token);
     clearSetupStorage();
     setUser(authUser);
     setNeedsTotpSetup(false);
     setPendingEmployeeId(null);
     setPendingSetupToken(null);
+    return authUser;
   }, []);
 
   const loginWithoutTotp = useCallback(async (employeeCode: string, password: string) => {
@@ -108,16 +126,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { needsTotp: !data.totp_required, employeeId: data.employee_id };
   }, []);
 
-  const logout = useCallback(() => {
-    if (user) authApi.logout().catch(() => null);
-    localStorage.removeItem(STORAGE_KEYS.TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.USER);
-    clearSetupStorage();
-    setUser(null);
-    setNeedsTotpSetup(false);
-    setPendingEmployeeId(null);
-    setPendingSetupToken(null);
-    window.location.href = `${APP_BASE_PATH}/login`;
+  const logout = useCallback(async () => {
+    try {
+      if (user) await authApi.logout();
+    } finally {
+      setApiCsrfToken(null);
+      clearSetupStorage();
+      setUser(null);
+      setNeedsTotpSetup(false);
+      setPendingEmployeeId(null);
+      setPendingSetupToken(null);
+      window.location.assign(`${APP_BASE_PATH}/login`);
+    }
   }, [user]);
 
   const clearTotpSetup = useCallback(() => {

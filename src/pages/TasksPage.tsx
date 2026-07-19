@@ -8,6 +8,8 @@ import { Badge } from "../components/ui/Badge";
 import { PageLoader } from "../components/ui/LoadingSpinner";
 import { EmptyState } from "../components/ui/EmptyState";
 import type { Task } from "../lib/types";
+import { FormAlert } from "../components/ui/FormLayout";
+import { getApiErrorMessage } from "../lib/errors";
 
 const priorityColors = {
   low: "default",
@@ -65,9 +67,15 @@ export function TasksPage() {
   const pendingTasks = tasks?.filter((t: Task) => t.status === "pending") || [];
   const inProgressTasks = tasks?.filter((t: Task) => t.status === "in_progress") || [];
   const completedTasks = tasks?.filter((t: Task) => ["completed", "approved"].includes(t.status)) || [];
+  const actionError = markComplete.error || submitForReview.error;
 
   return (
     <div className="space-y-6">
+      {actionError && (
+        <FormAlert tone="error">
+          {getApiErrorMessage(actionError, "The task could not be updated.")}
+        </FormAlert>
+      )}
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -78,10 +86,11 @@ export function TasksPage() {
         </div>
         {isManagerOrAdmin && (
           <button
+            type="button"
             onClick={() => navigate("/tasks/assign")}
             className="btn-primary h-10 w-full sm:w-auto"
           >
-            <span className="material-symbols-outlined text-[18px]">assignment_add</span>
+            <span aria-hidden="true" className="material-symbols-outlined text-[18px]">assignment_add</span>
             Assign Task
           </button>
         )}
@@ -162,20 +171,22 @@ export function TasksPage() {
                     <div className="flex flex-wrap gap-2">
                       {(task.status === "pending" || task.status === "in_progress" || task.status === "changes_requested") && (
                         <button
+                          type="button"
                           className="btn-secondary"
                           onClick={() => markComplete.mutate(task.id)}
                           disabled={markComplete.isPending}
                         >
-                          Mark Complete
+                          {markComplete.isPending && markComplete.variables === task.id ? "Updating…" : "Mark Complete"}
                         </button>
                       )}
                       {(task.status === "completed" || task.status === "changes_requested") && (
                         <button
+                          type="button"
                           className="btn-primary"
                           onClick={() => submitForReview.mutate(task.id)}
                           disabled={submitForReview.isPending}
                         >
-                          Submit for Review
+                          {submitForReview.isPending && submitForReview.variables === task.id ? "Submitting…" : "Submit for Review"}
                         </button>
                       )}
                     </div>

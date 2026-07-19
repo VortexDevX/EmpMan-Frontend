@@ -25,6 +25,7 @@ export interface DashboardData {
   showPersonalExecution: boolean;
   overview: DashboardOverview | undefined;
   isLoading: boolean;
+  error: unknown;
   pendingTasks: Task[];
   completedTasks: Task[];
   chartData: ProductivityChartRow[];

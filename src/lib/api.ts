@@ -35,10 +35,6 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://emp-manan.mvlab.cloud";
 const GATEWAY_API_URL = import.meta.env.VITE_GATEWAY_API_URL || "";
 const GATEWAY_WITH_CREDENTIALS = import.meta.env.VITE_GATEWAY_WITH_CREDENTIALS !== "false";
-const APP_BASE_PATH = import.meta.env.BASE_URL.endsWith("/")
-  ? import.meta.env.BASE_URL.slice(0, -1) || ""
-  : import.meta.env.BASE_URL;
-
 if (import.meta.env.DEV) {
   console.log("[API] Base URL:", API_BASE_URL);
   console.log("[API] Gateway URL:", GATEWAY_API_URL || "(same-origin)");
@@ -49,9 +45,17 @@ export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: { "Content-Type": "application/json" },
   timeout: 30000,
+  withCredentials: true,
 });
 
-// Attach bearer token from localStorage when available
+let apiCsrfToken: string | null = null;
+
+export const AUTH_UNAUTHORIZED_EVENT = "employee-auth-unauthorized";
+
+export function setApiCsrfToken(token: string | null): void {
+  apiCsrfToken = token;
+}
+
 api.interceptors.request.use((config) => {
   const url = config.url;
   if (typeof url === "string") {
@@ -72,9 +76,13 @@ api.interceptors.request.use((config) => {
     config.url = normalized;
   }
 
-  const token = localStorage.getItem("access_token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const method = config.method?.toLowerCase();
+  if (
+    apiCsrfToken &&
+    method &&
+    ["post", "put", "patch", "delete"].includes(method)
+  ) {
+    config.headers.set("X-CSRF-Token", apiCsrfToken);
   }
   return config;
 });
@@ -89,10 +97,8 @@ api.interceptors.response.use(
     const isOnLoginPage = window.location.pathname.includes("/login");
 
     if (status === 401 && !isAuthCall && !isOnLoginPage) {
-      console.warn("[API] Unauthorized - redirecting to login");
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("auth_user");
-      window.location.href = `${APP_BASE_PATH}/login`;
+      apiCsrfToken = null;
+      window.dispatchEvent(new CustomEvent(AUTH_UNAUTHORIZED_EVENT));
     }
     
     return Promise.reject(error);
@@ -164,6 +170,7 @@ export const authApi = {
       employee_code: string;
       role: string;
       full_name: string;
+      csrf_token: string;
     }>("/api/v1/auth/exchange", { code }),
 
   preflight: (employee_code: string, password: string) =>
@@ -186,6 +193,7 @@ export const authApi = {
       employee_code: string;
       role: string;
       full_name: string;
+      csrf_token: string;
     }>("/api/v1/auth/login", {
       employee_code,
       password,
@@ -209,6 +217,15 @@ export const authApi = {
     }>("/api/v1/auth/register", {
       setup_token,
     }),
+
+  session: () =>
+    api.get<{
+      employee_id: number;
+      employee_code: string;
+      role: string;
+      full_name: string;
+      csrf_token: string;
+    }>("/api/v1/auth/session"),
 
   confirmTotp: (confirmation_token: string, totp_code: string) =>
     api.post("/api/v1/auth/confirm-totp", { confirmation_token, totp_code }),

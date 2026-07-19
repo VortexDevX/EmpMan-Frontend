@@ -1,4 +1,5 @@
 // src/components/Sidebar.tsx
+import { useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../contexts/useAuth";
 import { getSidebarGroups, type UserRole } from "../lib/routes";
@@ -11,6 +12,14 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user, logout } = useAuth();
 
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isOpen) onClose();
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isOpen, onClose]);
+
   if (!user) return null;
   const groups = getSidebarGroups(user.role as UserRole);
   const groupOrder = ["main", "management", "admin"];
@@ -18,7 +27,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <>
       {/* Mobile overlay */}
-      <div
+      <button
+        type="button"
+        aria-label="Close navigation menu"
+        tabIndex={isOpen ? 0 : -1}
         className={`fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-30 md:hidden transition-opacity ${
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
@@ -26,18 +38,19 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       />
 
       <aside
+        aria-label="Primary navigation"
         className={`w-64 lg:w-72 h-screen bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col fixed left-0 top-0 z-40 md:z-30 transform transition-transform duration-200 ${
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
         {/* Logo / Brand */}
         <div className="h-[72px] px-4 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
-          <div className="h-10 w-10 rounded-lg bg-primary-700 flex items-center justify-center shadow-sm">
-            <span className="material-symbols-outlined text-white text-[22px]">monitoring</span>
+          <div className="h-10 w-10 rounded-xl bg-primary-700 flex items-center justify-center shadow-lg shadow-primary-900/15">
+            <span className="material-symbols-outlined text-white text-[22px]" aria-hidden="true">workspaces</span>
           </div>
           <div className="min-w-0">
-            <h1 className="text-[15px] font-bold text-slate-900 dark:text-white truncate section-title">Employee Dashboard</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">{user.role} Workspace</p>
+            <p className="text-[15px] font-bold text-slate-900 dark:text-white truncate section-title">Workforce OS</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">{user.role} command center</p>
           </div>
           <button
             type="button"
@@ -50,7 +63,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
+        <nav aria-label="Primary navigation" className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
           {groupOrder.map((groupKey) => {
             const group = groups[groupKey];
             if (!group) return null;
@@ -75,7 +88,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                           }`
                         }
                       >
-                        <span className="material-symbols-outlined text-[22px]">{route.icon}</span>
+                        <span className="material-symbols-outlined text-[22px]" aria-hidden="true">{route.icon}</span>
                         <span className="truncate">{route.label}</span>
                       </NavLink>
                     </li>
@@ -103,11 +116,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               </p>
             </div>
             <button
-              onClick={logout}
+              type="button"
+              onClick={() => void logout()}
               className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               title="Sign out"
+              aria-label={`Sign out ${user.full_name || user.employee_code}`}
             >
-              <span className="material-symbols-outlined text-[20px]">logout</span>
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">logout</span>
             </button>
           </div>
         </div>
